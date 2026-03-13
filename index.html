@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexoATM — Cajero Automático Universal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atm.css">
+</head>
+<body>
+
+<div class="toast-box" id="toastBox"></div>
+
+<div class="atm-machine" id="atmMachine">
+  <div class="atm-strip" id="atmStrip"></div>
+
+  <div class="atm-display">
+    <!-- Status Bar con idioma (RF-9) -->
+    <div class="status-bar">
+      <div><span class="status-dot"></span> NexoATM v2.0</div>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btnES" onclick="setLang('es'); document.getElementById('btnES').classList.add('active'); document.getElementById('btnEN').classList.remove('active');">ES</button>
+        <button class="lang-btn" id="btnEN" onclick="setLang('en'); document.getElementById('btnEN').classList.add('active'); document.getElementById('btnES').classList.remove('active');">EN</button>
+      </div>
+      <div id="clockDisplay">--:--:--</div>
+    </div>
+
+    <div class="screen-content" id="screenContent">
+
+      <!-- ═══ IDLE ═══ -->
+      <div class="view active" id="view-idle">
+        <div class="welcome-logo">
+          <div class="uni-icon">N</div>
+          <h2>NexoATM</h2>
+          <p data-lang="subtitle">Cajero Automático Universal</p>
+        </div>
+        <div class="insert-prompt" onclick="goTo('bank-select')">
+          <div class="icon">💳</div>
+          <div class="label" data-lang="insert_card">Toque para insertar su tarjeta</div>
+          <div class="sub" data-lang="compatible">Compatible con todas las redes bancarias</div>
+        </div>
+        <div class="network-badges">
+          <span class="network-badge" style="color:#6680ff">VISA</span>
+          <span class="network-badge" style="color:#ff6677">MC</span>
+          <span class="network-badge" style="color:#44aaff">AMEX</span>
+        </div>
+        <div class="bottom-links">
+          <a href="#" onclick="loadRegisterBanks(); goTo('register');" data-lang="register_btn">Registrar</a>
+          <a href="dashboard.html" data-lang="go_dashboard">Panel Admin</a>
+        </div>
+      </div>
+
+      <!-- ═══ BANK SELECT ═══ -->
+      <div class="view" id="view-bank-select">
+        <div class="section-title" data-lang="select_bank">Seleccione su banco</div>
+        <div id="bankList"><div class="small-text" style="padding:30px 0;">Cargando...</div></div>
+        <div class="actions-row" style="margin-top:14px;">
+          <button class="act-btn act-secondary" onclick="goTo('idle')" data-lang="cancel">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- ═══ CARD SELECT ═══ -->
+      <div class="view" id="view-card-select">
+        <div class="back-link" onclick="goTo('bank-select')" data-lang="change_bank">← Cambiar banco</div>
+        <div class="bank-header" id="cardSelectHeader"></div>
+        <div class="section-title" data-lang="select_card">Seleccione su tarjeta</div>
+        <div id="cardList"><div class="small-text" style="padding:24px 0;">Cargando...</div></div>
+        <div class="actions-row"><button class="act-btn act-danger" onclick="ejectCard()" data-lang="cancel">Cancelar</button></div>
+      </div>
+
+      <!-- ═══ PIN ENTRY (RF-1, RF-2) ═══ -->
+      <div class="view" id="view-pin">
+        <div class="bank-header"></div>
+        <p class="pin-message" data-lang="enter_pin">Ingrese su PIN de 4 dígitos</p>
+        <div class="pin-dots" id="pinDots">
+          <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+        <p class="pin-message" id="pinStatus"></p>
+        <div class="actions-row"><button class="act-btn act-danger" onclick="ejectCard()" data-lang="cancel">Cancelar</button></div>
+      </div>
+
+      <!-- ═══ MENU (RF-13) ═══ -->
+      <div class="view" id="view-menu">
+        <div class="bank-header"></div>
+        <p id="welcomeUser" class="center-text" style="font-size:12px;color:#7a82a0;margin-bottom:14px;"></p>
+        <div class="menu-grid">
+          <div class="menu-option" onclick="goToOperation('withdrawal')">
+            <div class="m-icon">💸</div><div class="m-label" data-lang="withdrawal">Retiro</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('deposit')">
+            <div class="m-icon">💰</div><div class="m-label" data-lang="deposit">Depósito</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('transfer')">
+            <div class="m-icon">🔄</div><div class="m-label" data-lang="transfer">Transferencia</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('balance')">
+            <div class="m-icon">👁️</div><div class="m-label" data-lang="balance">Saldo</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('pin_change')">
+            <div class="m-icon">🔑</div><div class="m-label" data-lang="pin_change">Cambio PIN</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('history')">
+            <div class="m-icon">📜</div><div class="m-label" data-lang="history">Historial</div>
+          </div>
+        </div>
+        <div class="actions-row" style="margin-top:14px;">
+          <button class="act-btn act-danger" onclick="ejectCard()" data-lang="eject_card">Retirar Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- ═══ WITHDRAWAL (RF-4) ═══ -->
+      <div class="view" id="view-withdrawal">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="withdrawal_title">Retiro de efectivo</div>
+        <div class="amount-display">
+          <span class="currency">Bs</span>
+          <div class="value" id="wAmount">0</div>
+        </div>
+        <div class="quick-grid">
+          <div class="quick-btn" onclick="setQuick(100)">Bs 100</div>
+          <div class="quick-btn" onclick="setQuick(200)">Bs 200</div>
+          <div class="quick-btn" onclick="setQuick(500)">Bs 500</div>
+          <div class="quick-btn" onclick="setQuick(1000)">Bs 1,000</div>
+          <div class="quick-btn" onclick="setQuick(1500)">Bs 1,500</div>
+          <div class="quick-btn" onclick="setQuick(2000)">Bs 2,000</div>
+        </div>
+        <p class="small-text" data-lang="use_keypad">O use el teclado para otro monto</p>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitWithdrawal()" data-lang="confirm">Confirmar</button>
+        </div>
+      </div>
+
+      <!-- ═══ DEPOSIT (RF-5) ═══ -->
+      <div class="view" id="view-deposit">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="deposit_title">Depósito de efectivo</div>
+        <div class="amount-display">
+          <span class="currency">Bs</span>
+          <div class="value" id="dAmount">0</div>
+        </div>
+        <div class="quick-grid">
+          <div class="quick-btn" onclick="setQuick(100)">Bs 100</div>
+          <div class="quick-btn" onclick="setQuick(500)">Bs 500</div>
+          <div class="quick-btn" onclick="setQuick(1000)">Bs 1,000</div>
+          <div class="quick-btn" onclick="setQuick(2000)">Bs 2,000</div>
+          <div class="quick-btn" onclick="setQuick(5000)">Bs 5,000</div>
+          <div class="quick-btn" onclick="setQuick(10000)">Bs 10,000</div>
+        </div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitDeposit()" data-lang="confirm">Confirmar</button>
+        </div>
+      </div>
+
+      <!-- ═══ TRANSFER (RF-6) ═══ -->
+      <div class="view" id="view-transfer">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="transfer_title">Transferencia</div>
+        <select class="atm-input" id="transferTarget">
+          <option value="" data-lang="select_target">— Seleccione cuenta destino —</option>
+        </select>
+        <div class="amount-display">
+          <span class="currency">Bs</span>
+          <div class="value" id="tAmount">0</div>
+        </div>
+        <p class="small-text" data-lang="enter_amount_keypad">Use el teclado para ingresar el monto</p>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitTransfer()" data-lang="transfer_btn">Transferir</button>
+        </div>
+      </div>
+
+      <!-- ═══ BALANCE (RF-3) ═══ -->
+      <div class="view" id="view-balance">
+        <div class="bank-header"></div>
+        <div class="balance-show">
+          <div class="lbl" data-lang="available_balance">Saldo Disponible</div>
+          <div class="amt" id="balanceAmount">--</div>
+          <div class="extra" id="balanceExtra"></div>
+        </div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="main_menu">Menú Principal</button>
+          <button class="act-btn act-danger" onclick="ejectCard()" data-lang="eject_card">Retirar Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- ═══ PIN CHANGE (RF-7) ═══ -->
+      <div class="view" id="view-pin-change">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="pin_change_title">Cambio de PIN</div>
+        <label class="form-label" data-lang="current_pin">PIN Actual</label>
+        <input type="password" class="atm-input" id="currentPinInput" maxlength="4" inputmode="numeric" placeholder="****">
+        <label class="form-label" data-lang="new_pin">Nuevo PIN</label>
+        <input type="password" class="atm-input" id="newPinInput" maxlength="4" inputmode="numeric" placeholder="****">
+        <label class="form-label" data-lang="confirm_new_pin">Confirmar Nuevo PIN</label>
+        <input type="password" class="atm-input" id="confirmPinInput" maxlength="4" inputmode="numeric" placeholder="****">
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitPinChange()" data-lang="change_btn">Cambiar PIN</button>
+        </div>
+      </div>
+
+      <!-- ═══ HISTORY (RF-8) ═══ -->
+      <div class="view" id="view-history">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="history_title">Últimos Movimientos</div>
+        <div id="historyList"><div class="small-text" style="padding:20px 0;">Cargando...</div></div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+        </div>
+      </div>
+
+      <!-- ═══ PROCESSING ═══ -->
+      <div class="view" id="view-processing">
+        <div class="processing-view">
+          <div class="spinner"></div>
+          <p data-lang="processing">Procesando operación...</p>
+          <p class="small-text" data-lang="dont_remove">No retire su tarjeta</p>
+        </div>
+      </div>
+
+      <!-- ═══ RECEIPT (RF-10) ═══ -->
+      <div class="view" id="view-receipt">
+        <div class="center-text">
+          <div class="success-mark">✓</div>
+          <p style="font-size:14px;font-weight:700;color:#00dd77;margin-bottom:12px;" data-lang="success">Operación Exitosa</p>
+        </div>
+        <div class="receipt-paper" id="receiptContent"></div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="another_op">Otra Operación</button>
+          <button class="act-btn act-secondary" onclick="printReceipt()" data-lang="print_receipt">Imprimir</button>
+          <button class="act-btn act-primary" onclick="ejectCard()" data-lang="eject_card">Retirar Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- ═══ REGISTER (RF-15) ═══ -->
+      <div class="view" id="view-register">
+        <div class="section-title" data-lang="register_title">Registro de Nueva Cuenta</div>
+        <label class="form-label" data-lang="ci_label">Carnet de Identidad</label>
+        <input type="text" class="atm-input" id="regCI" maxlength="10" placeholder="Ej: 7654321">
+        <label class="form-label" data-lang="first_name">Nombre(s)</label>
+        <input type="text" class="atm-input" id="regFirstName" placeholder="Ej: Juan Carlos">
+        <label class="form-label" data-lang="last_name">Apellido(s)</label>
+        <input type="text" class="atm-input" id="regLastName" placeholder="Ej: Mamani Quispe">
+        <label class="form-label" data-lang="select_bank_reg">Banco</label>
+        <select class="atm-input" id="regBank"><option value="">Cargando...</option></select>
+        <label class="form-label" data-lang="pin_label">PIN (4 dígitos)</label>
+        <input type="password" class="atm-input" id="regPin" maxlength="4" inputmode="numeric" placeholder="****">
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('idle')" data-lang="back_login">← Volver</button>
+          <button class="act-btn act-primary" onclick="submitRegister()" data-lang="register_btn">Registrar</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RF-14: Confirmación overlay -->
+    <div class="confirm-overlay" id="confirmOverlay">
+      <div class="confirm-box">
+        <div class="c-icon">⚠️</div>
+        <div class="c-title" data-lang="confirm_title">¿Confirmar operación?</div>
+        <div id="confirmMessage" class="small-text"></div>
+        <div class="c-detail" id="confirmDetail">Bs 0.00</div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="confirmNo()" data-lang="no">No, cancelar</button>
+          <button class="act-btn act-primary" onclick="confirmYes()" data-lang="yes">Sí, confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RF-11: Barra de inactividad -->
+    <div class="inactivity-bar" id="inactivityBar"></div>
+  </div>
+
+  <div class="card-slot-physical">
+    <div class="slot-glow"></div>
+    <span data-lang="insert_label">▸ INSERTAR TARJETA ◂</span>
+  </div>
+
+  <div class="atm-keypad-area">
+    <div class="keypad-grid">
+      <button class="key-btn" onclick="keyPress('1')">1</button>
+      <button class="key-btn" onclick="keyPress('2')">2</button>
+      <button class="key-btn" onclick="keyPress('3')">3</button>
+      <button class="key-btn" onclick="keyPress('4')">4</button>
+      <button class="key-btn" onclick="keyPress('5')">5</button>
+      <button class="key-btn" onclick="keyPress('6')">6</button>
+      <button class="key-btn" onclick="keyPress('7')">7</button>
+      <button class="key-btn" onclick="keyPress('8')">8</button>
+      <button class="key-btn" onclick="keyPress('9')">9</button>
+      <button class="key-btn fn-red" onclick="keyCancel()">CANCEL</button>
+      <button class="key-btn" onclick="keyPress('0')">0</button>
+      <button class="key-btn fn-green" onclick="keyEnter()">ENTER</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts separados -->
+<script src="js/lang.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
