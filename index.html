@@ -299,5 +299,797 @@
 <!-- Scripts separados -->
 <script src="js/lang.js"></script>
 <script src="js/app.js"></script>
+=======
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIT-BANK ATM v3.0</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon: #00ff41;
+            --neon-dim: #00aa2a;
+            --dark: #001a00;
+            --screen: #0a0e0a;
+            --danger: #ff4444;
+            --warn: #ffaa00;
+            --info: #44aaff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            background-image:
+                radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, transparent 60%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 65, 0.015) 2px, rgba(0, 255, 65, 0.015) 4px);
+            color: var(--neon);
+            font-family: 'VT323', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        #machine-wrap {
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            padding: 28px;
+            border: 3px solid #555;
+            border-radius: 18px;
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.9),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            text-align: center;
+            position: relative;
+        }
+
+        /* Logo strip */
+        #machine-wrap::before {
+            content: "◆ BIT-BANK ◆";
+            display: block;
+            font-size: 1rem;
+            color: #888;
+            letter-spacing: 8px;
+            margin-bottom: 15px;
+            padding: 6px;
+            background: #111;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        #screen {
+            width: 520px;
+            min-height: 400px;
+            background: var(--screen);
+            border: 10px solid #111;
+            border-radius: 6px;
+            position: relative;
+            padding: 24px;
+            overflow: hidden;
+            box-shadow:
+                inset 0 0 50px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(0, 255, 65, 0.05);
+        }
+
+        /* Scanlines */
+        #screen::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.08) 50%
+            );
+            background-size: 100% 3px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* CRT curvature */
+        #screen::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, transparent 65%, rgba(0,0,0,0.3) 100%);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .view {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            text-transform: uppercase;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active { display: flex; }
+
+        h1 { font-size: 2.2rem; margin-bottom: 5px; text-shadow: 0 0 10px var(--neon); }
+        h2 { font-size: 1.6rem; margin-bottom: 10px; text-shadow: 0 0 8px var(--neon); }
+        h3 { font-size: 1.3rem; margin-bottom: 5px; }
+
+        /* Inputs */
+        .field-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--neon);
+            color: var(--neon);
+            font-family: 'VT323', monospace;
+            font-size: 1.6rem;
+            text-align: center;
+            width: 85%;
+            outline: none;
+            margin: 8px auto;
+            letter-spacing: 4px;
+        }
+
+        .field-input::placeholder {
+            color: var(--neon-dim);
+            opacity: 0.4;
+        }
+
+        /* Pinpad */
+        #pinpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 18px;
+            background: #151515;
+            padding: 16px;
+            border-radius: 10px;
+            border: 2px solid #333;
+        }
+
+        .key {
+            width: 65px;
+            height: 48px;
+            background: linear-gradient(180deg, #555 0%, #3a3a3a 100%);
+            border: none;
+            color: white;
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 5px;
+            border-bottom: 4px solid #222;
+            transition: all 0.1s;
+        }
+
+        .key:active {
+            transform: translateY(3px);
+            border-bottom: 1px solid #222;
+        }
+
+        .key:hover { background: linear-gradient(180deg, #666 0%, #4a4a4a 100%); }
+        .key.red { background: linear-gradient(180deg, #aa3333 0%, #882222 100%); }
+        .key.red:hover { background: linear-gradient(180deg, #cc4444 0%, #aa3333 100%); }
+        .key.green { background: linear-gradient(180deg, #33aa33 0%, #228822 100%); }
+        .key.green:hover { background: linear-gradient(180deg, #44cc44 0%, #33aa33 100%); }
+
+        /* Botones de pantalla */
+        .btn-opt {
+            background: var(--dark);
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            padding: 10px 14px;
+            margin: 4px;
+            cursor: pointer;
+            font-family: 'VT323', monospace;
+            font-size: 1.15rem;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .btn-opt:hover {
+            background: var(--neon);
+            color: var(--dark);
+            box-shadow: 0 0 10px var(--neon);
+        }
+
+        .btn-opt.danger {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .btn-opt.danger:hover {
+            background: var(--danger);
+            color: #000;
+            box-shadow: 0 0 10px var(--danger);
+        }
+
+        /* Mensajes */
+        .msg-error { color: var(--danger); font-size: 1rem; min-height: 1.2em; }
+        .msg-success { color: var(--neon); font-size: 1rem; }
+        .msg-warn { color: var(--warn); font-size: 1rem; }
+        .msg-info { color: var(--info); font-size: 0.95rem; }
+
+        /* Display grande */
+        .big-display {
+            font-size: 3rem;
+            margin: 15px 0;
+            letter-spacing: 8px;
+            text-shadow: 0 0 15px var(--neon);
+        }
+
+        .amount-display {
+            font-size: 2.5rem;
+            color: white;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* Menu grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 10px 0;
+        }
+
+        /* Saldo display */
+        .saldo-line {
+            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+        .saldo-line span { color: white; font-size: 1.4rem; }
+
+        /* Historial */
+        .history-box {
+            font-size: 0.85rem;
+            text-align: left;
+            border-top: 1px dashed var(--neon-dim);
+            margin-top: 8px;
+            padding-top: 6px;
+            max-height: 90px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        .history-box::-webkit-scrollbar { width: 4px; }
+        .history-box::-webkit-scrollbar-thumb { background: var(--neon-dim); border-radius: 2px; }
+
+        /* Movimientos lista */
+        .mov-list {
+            text-align: left;
+            font-size: 0.9rem;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .mov-item {
+            padding: 5px 0;
+            border-bottom: 1px dotted #1a3a1a;
+        }
+
+        .mov-item .tipo-retiro { color: var(--danger); }
+        .mov-item .tipo-deposito { color: var(--neon); }
+
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Card slot visual */
+        #card-slot {
+            width: 180px;
+            height: 8px;
+            background: #000;
+            margin: 10px auto 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Footer text */
+        .footer-text {
+            font-size: 0.7rem;
+            color: #555;
+            margin-top: 12px;
+        }
+
+        /* Retiro rápido botones */
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="machine-wrap">
+        <div id="screen">
+
+            <!-- ========== PANTALLA INICIO ========== -->
+            <div id="v-start" class="view active">
+                <h1>BIT-BANK</h1>
+                <p style="font-size: 1.1rem; color: #888;">SISTEMA ATM v3.0</p>
+                <p style="margin-top: 8px;">🔒 SISTEMA DE SEGURIDAD ACTIVADO</p>
+                <div style="margin-top: 40px;">
+                    <button class="btn-opt" onclick="initAudioAndStart()" style="font-size: 1.4rem; padding: 14px 30px;">
+                        [ INSERTAR TARJETA ]
+                    </button>
+                </div>
+                <p class="footer-text" style="margin-top: 60px;">
+                    SOPORTE: 01-800-BITBANK | Laboratorio 3
+                </p>
+            </div>
+
+            <!-- ========== PANTALLA LOGIN ========== -->
+            <div id="v-login" class="view">
+                <h2>IDENTIFICACIÓN</h2>
+                <p style="font-size: 0.95rem; color: #888; margin-bottom: 10px;">INGRESE NÚMERO DE TARJETA:</p>
+                <input type="text" id="input-tarjeta" class="field-input" maxlength="16" placeholder="0000000000000000">
+                <p style="font-size: 0.95rem; color: #888; margin-top: 10px;">INGRESE PIN (4 DÍGITOS):</p>
+                <div id="pin-display" class="big-display">____</div>
+                <p id="login-msg" class="msg-error"></p>
+                <p style="font-size: 0.8rem; color: #555;">USE EL PINPAD PARA EL PIN · ENT PARA CONFIRMAR</p>
+            </div>
+
+            <!-- ========== MENÚ PRINCIPAL ========== -->
+            <div id="v-menu" class="view">
+                <h3 id="u-name">AGENTE: ---</h3>
+                <p class="saldo-line">SALDO: <span id="u-bal">$0.00</span></p>
+                <div class="menu-grid">
+                    <button class="btn-opt" onclick="goTo('v-withdraw')">1. RETIRO</button>
+                    <button class="btn-opt" onclick="goTo('v-deposit')">2. DEPÓSITO</button>
+                    <button class="btn-opt" onclick="goTo('v-history')">3. MOVIMIENTOS</button>
+                    <button class="btn-opt" onclick="consultarSaldo()">4. CONSULTAR SALDO</button>
+                </div>
+                <button class="btn-opt danger" onclick="logout()" style="width: 100%; margin-top: 4px;">
+                    ■ SALIR / RETIRAR TARJETA
+                </button>
+                <div id="menu-msg" class="msg-success" style="margin-top: 6px; min-height: 1.2em;"></div>
+                <div class="history-box" id="u-logs"></div>
+            </div>
+
+            <!-- ========== PANTALLA RETIRO ========== -->
+            <div id="v-withdraw" class="view">
+                <h2>RETIRAR EFECTIVO</h2>
+                <p style="font-size: 0.95rem; color: #888;">SELECCIONE MONTO RÁPIDO O INGRESE EN PINPAD:</p>
+                <div class="quick-amounts">
+                    <button class="btn-opt" onclick="retirar(50)">$50</button>
+                    <button class="btn-opt" onclick="retirar(100)">$100</button>
+                    <button class="btn-opt" onclick="retirar(200)">$200</button>
+                    <button class="btn-opt" onclick="retirar(500)">$500</button>
+                </div>
+                <p style="font-size: 0.9rem; color: #888; margin-top: 5px;">MONTO PERSONALIZADO:</p>
+                <div id="withdraw-amount" class="amount-display">$0</div>
+                <p id="withdraw-msg" class="msg-error"></p>
+                <button class="btn-opt" onclick="goTo('v-menu')">◄ VOLVER</button>
+            </div>
+
+            <!-- ========== PANTALLA DEPÓSITO ========== -->
+            <div id="v-deposit" class="view">
+                <h2>DEPOSITAR</h2>
+                <p style="font-size: 0.95rem; color: #888;">INGRESE MONTO EN EL PINPAD Y PULSE ENT:</p>
+                <div id="deposit-amount" class="amount-display">$0</div>
+                <p id="deposit-msg" class="msg-error"></p>
+                <button class="btn-opt" onclick="goTo('v-menu')">◄ CANCELAR</button>
+            </div>
+
+            <!-- ========== PANTALLA MOVIMIENTOS ========== -->
+            <div id="v-history" class="view">
+                <h2>ÚLTIMOS MOVIMIENTOS</h2>
+                <div id="mov-list" class="mov-list">
+                    <p class="loading">CARGANDO...</p>
+                </div>
+                <button class="btn-opt" onclick="goTo('v-menu')" style="margin-top: 10px;">◄ VOLVER</button>
+            </div>
+
+            <!-- ========== PANTALLA RESULTADO ========== -->
+            <div id="v-result" class="view" style="justify-content: center; align-items: center;">
+                <div id="result-icon" style="font-size: 3rem;"></div>
+                <p id="result-msg" style="font-size: 1.4rem; margin: 15px 0;"></p>
+                <p id="result-detail" style="font-size: 1rem; color: #888;"></p>
+                <button class="btn-opt" onclick="goTo('v-menu')" style="margin-top: 20px;">◄ CONTINUAR</button>
+            </div>
+
+        </div>
+
+        <!-- PINPAD FÍSICO -->
+        <div id="pinpad">
+            <button class="key" onclick="kp('1')">1</button>
+            <button class="key" onclick="kp('2')">2</button>
+            <button class="key" onclick="kp('3')">3</button>
+            <button class="key" onclick="kp('4')">4</button>
+            <button class="key" onclick="kp('5')">5</button>
+            <button class="key" onclick="kp('6')">6</button>
+            <button class="key" onclick="kp('7')">7</button>
+            <button class="key" onclick="kp('8')">8</button>
+            <button class="key" onclick="kp('9')">9</button>
+            <button class="key red" onclick="kp('C')">CLR</button>
+            <button class="key" onclick="kp('0')">0</button>
+            <button class="key green" onclick="kp('E')">ENT</button>
+        </div>
+
+        <div id="card-slot"></div>
+    </div>
+
+    <script>
+        // =============================================
+        // MOTOR DE AUDIO
+        // =============================================
+        let audioCtx = null;
+
+        function playSound(freq, type, duration, vol = 0.08) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(g);
+            g.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const sfx = {
+            key:     () => playSound(600, 'sine', 0.08),
+            enter:   () => playSound(880, 'square', 0.15),
+            error:   () => playSound(150, 'sawtooth', 0.35, 0.15),
+            success: () => { playSound(523, 'sine', 0.1); setTimeout(() => playSound(784, 'sine', 0.2), 100); },
+            cash:    () => { for (let i = 0; i < 8; i++) setTimeout(() => playSound(300 + i * 50, 'triangle', 0.1), i * 55); },
+            card:    () => { playSound(200, 'triangle', 0.15); setTimeout(() => playSound(400, 'triangle', 0.1), 150); },
+            logout:  () => { playSound(500, 'sine', 0.1); setTimeout(() => playSound(350, 'sine', 0.15), 120); }
+        };
+
+        // =============================================
+        // CONFIGURACIÓN
+        // =============================================
+        const API_URL = 'api'; // Ruta relativa a la carpeta api/
+
+        let currentView = 'v-start';
+        let currentPin = '';
+        let tempInput = '';
+        let usuarioActual = null;
+
+        // =============================================
+        // INICIALIZACIÓN
+        // =============================================
+        function initAudioAndStart() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            sfx.card();
+            goTo('v-login');
+            $('#input-tarjeta').focus();
+        }
+
+        // =============================================
+        // NAVEGACIÓN
+        // =============================================
+        function goTo(id) {
+            currentView = id;
+            tempInput = '';
+            currentPin = '';
+            $('.view').removeClass('active');
+            $('#' + id).addClass('active');
+
+            // Limpiar mensajes
+            $('.msg-error, .msg-success, .msg-warn').text('');
+
+            // Acciones al entrar a cada vista
+            if (id === 'v-login') {
+                updatePinDisplay();
+                $('#input-tarjeta').val('').focus();
+            }
+            if (id === 'v-menu') renderMenu();
+            if (id === 'v-withdraw') $('#withdraw-amount').text('$0');
+            if (id === 'v-deposit') $('#deposit-amount').text('$0');
+            if (id === 'v-history') cargarMovimientos();
+        }
+
+        // =============================================
+        // PINPAD
+        // =============================================
+        function kp(k) {
+            if (k === 'C') {
+                sfx.error();
+                tempInput = '';
+                currentPin = '';
+            } else if (k === 'E') {
+                handleEnter();
+                return;
+            } else {
+                sfx.key();
+                if (currentView === 'v-login') {
+                    if (currentPin.length < 4) currentPin += k;
+                } else {
+                    tempInput += k;
+                }
+            }
+            updateDisplays();
+        }
+
+        function updatePinDisplay() {
+            let dots = '';
+            for (let i = 0; i < 4; i++) dots += currentPin[i] ? '●' : '_';
+            $('#pin-display').text(dots);
+        }
+
+        function updateDisplays() {
+            updatePinDisplay();
+            if (currentView === 'v-withdraw') {
+                $('#withdraw-amount').text('$' + (tempInput || '0'));
+            }
+            if (currentView === 'v-deposit') {
+                $('#deposit-amount').text('$' + (tempInput || '0'));
+            }
+        }
+
+        // =============================================
+        // ENTER HANDLER
+        // =============================================
+        function handleEnter() {
+            sfx.enter();
+
+            if (currentView === 'v-login') {
+                intentarLogin();
+            } else if (currentView === 'v-withdraw' && tempInput) {
+                retirar(parseFloat(tempInput));
+            } else if (currentView === 'v-deposit' && tempInput) {
+                depositar(parseFloat(tempInput));
+            }
+        }
+
+        // =============================================
+        // LOGIN
+        // =============================================
+        function intentarLogin() {
+            const tarjeta = $('#input-tarjeta').val().trim();
+            const pin = currentPin;
+
+            if (!tarjeta || tarjeta.length < 4) {
+                sfx.error();
+                $('#login-msg').text('INGRESE NÚMERO DE TARJETA');
+                return;
+            }
+            if (pin.length < 4) {
+                sfx.error();
+                $('#login-msg').text('INGRESE PIN DE 4 DÍGITOS');
+                return;
+            }
+
+            $('#login-msg').removeClass('msg-error').addClass('msg-info').text('VERIFICANDO...');
+
+            $.ajax({
+                url: `${API_URL}/login.php`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ tarjeta: tarjeta, pin: pin }),
+                dataType: 'json'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    usuarioActual = resp.usuario;
+                    sfx.success();
+                    goTo('v-menu');
+                }
+            })
+            .fail(function(xhr) {
+                sfx.error();
+                let msg = 'ERROR DE CONEXIÓN';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = xhr.responseJSON.error.toUpperCase();
+                }
+                $('#login-msg').removeClass('msg-info').addClass('msg-error').text(msg);
+                currentPin = '';
+                updatePinDisplay();
+            });
+        }
+
+        // =============================================
+        // MENÚ
+        // =============================================
+        function renderMenu() {
+            if (!usuarioActual) return;
+            $('#u-name').text('AGENTE: ' + usuarioActual.nombre.toUpperCase());
+            $('#u-bal').text('$' + parseFloat(usuarioActual.saldo).toFixed(2));
+            $('#u-logs').html('');
+        }
+
+        // =============================================
+        // CONSULTAR SALDO
+        // =============================================
+        function consultarSaldo() {
+            if (!usuarioActual) return;
+            $('#menu-msg').text('CONSULTANDO...');
+
+            $.get(`${API_URL}/balance.php`)
+                .done(function(data) {
+                    usuarioActual.saldo = data.saldo;
+                    sfx.success();
+                    $('#u-bal').text('$' + data.saldo.toFixed(2));
+                    $('#menu-msg').text('SALDO ACTUALIZADO ✓');
+                    setTimeout(() => $('#menu-msg').text(''), 3000);
+                })
+                .fail(function(xhr) {
+                    sfx.error();
+                    handleAuthError(xhr);
+                    $('#menu-msg').text('ERROR AL CONSULTAR');
+                });
+        }
+
+        // =============================================
+        // RETIRO
+        // =============================================
+        function retirar(monto) {
+            if (!monto || monto <= 0) {
+                sfx.error();
+                $('#withdraw-msg').text('MONTO INVÁLIDO');
+                return;
+            }
+
+            $('#withdraw-msg').removeClass('msg-error').addClass('msg-info').text('PROCESANDO...');
+
+            $.ajax({
+                url: `${API_URL}/withdraw.php`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ monto: monto }),
+                dataType: 'json'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    usuarioActual.saldo = resp.nuevo_saldo;
+                    sfx.cash();
+                    mostrarResultado('💵', 'RETIRO EXITOSO', `MONTO: $${monto.toFixed(2)} | NUEVO SALDO: $${resp.nuevo_saldo.toFixed(2)}`);
+                }
+            })
+            .fail(function(xhr) {
+                sfx.error();
+                let msg = 'ERROR AL PROCESAR';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = xhr.responseJSON.error.toUpperCase();
+                }
+                $('#withdraw-msg').removeClass('msg-info').addClass('msg-error').text(msg);
+                handleAuthError(xhr);
+            });
+        }
+
+        // =============================================
+        // DEPÓSITO
+        // =============================================
+        function depositar(monto) {
+            if (!monto || monto <= 0) {
+                sfx.error();
+                $('#deposit-msg').text('MONTO INVÁLIDO');
+                return;
+            }
+
+            $('#deposit-msg').removeClass('msg-error').addClass('msg-info').text('PROCESANDO...');
+
+            $.ajax({
+                url: `${API_URL}/deposit.php`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ monto: monto }),
+                dataType: 'json'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    usuarioActual.saldo = resp.nuevo_saldo;
+                    sfx.success();
+                    mostrarResultado('💰', 'DEPÓSITO EXITOSO', `MONTO: $${monto.toFixed(2)} | NUEVO SALDO: $${resp.nuevo_saldo.toFixed(2)}`);
+                }
+            })
+            .fail(function(xhr) {
+                sfx.error();
+                let msg = 'ERROR AL PROCESAR';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = xhr.responseJSON.error.toUpperCase();
+                }
+                $('#deposit-msg').removeClass('msg-info').addClass('msg-error').text(msg);
+                handleAuthError(xhr);
+            });
+        }
+
+        // =============================================
+        // MOVIMIENTOS
+        // =============================================
+        function cargarMovimientos() {
+            $('#mov-list').html('<p class="loading">CARGANDO...</p>');
+
+            $.get(`${API_URL}/transactions.php`)
+                .done(function(movimientos) {
+                    if (!movimientos || movimientos.length === 0) {
+                        $('#mov-list').html('<p style="color: var(--warn);">NO HAY MOVIMIENTOS RECIENTES</p>');
+                        return;
+                    }
+
+                    let html = '';
+                    movimientos.forEach(function(m) {
+                        const fecha = new Date(m.fecha).toLocaleString('es-BO');
+                        const tipoClass = m.tipo === 'retiro' ? 'tipo-retiro' : 'tipo-deposito';
+                        const signo = m.tipo === 'retiro' ? '-' : '+';
+                        const icono = m.tipo === 'retiro' ? '▼' : '▲';
+                        html += `<div class="mov-item">
+                            <span class="${tipoClass}">${icono} ${m.tipo.toUpperCase()}</span>
+                            ${signo}$${parseFloat(m.monto).toFixed(2)}
+                            <span style="color:#555; font-size:0.8rem;"> | ${fecha}</span>
+                        </div>`;
+                    });
+                    $('#mov-list').html(html);
+                    sfx.success();
+                })
+                .fail(function(xhr) {
+                    sfx.error();
+                    $('#mov-list').html('<p class="msg-error">ERROR AL CARGAR MOVIMIENTOS</p>');
+                    handleAuthError(xhr);
+                });
+        }
+
+        // =============================================
+        // RESULTADO
+        // =============================================
+        function mostrarResultado(icono, mensaje, detalle) {
+            $('#result-icon').text(icono);
+            $('#result-msg').text(mensaje);
+            $('#result-detail').text(detalle);
+            goTo('v-result');
+            // No limpiar el mensaje de resultado al navegar
+            $('#result-msg').text(mensaje);
+            $('#result-detail').text(detalle);
+            $('#result-icon').text(icono);
+        }
+
+        // =============================================
+        // LOGOUT
+        // =============================================
+        function logout() {
+            sfx.logout();
+            $.post(`${API_URL}/logout.php`).always(function() {
+                usuarioActual = null;
+                goTo('v-start');
+            });
+        }
+
+        // =============================================
+        // MANEJO DE ERRORES DE AUTENTICACIÓN
+        // =============================================
+        function handleAuthError(xhr) {
+            if (xhr.status === 401) {
+                // Sesión expirada, volver al login
+                setTimeout(function() {
+                    sfx.error();
+                    usuarioActual = null;
+                    goTo('v-start');
+                }, 1500);
+            }
+        }
+
+        // =============================================
+        // TECLADO FÍSICO (opcional)
+        // =============================================
+        $(document).on('keydown', function(e) {
+            if (e.key >= '0' && e.key <= '9') kp(e.key);
+            else if (e.key === 'Enter') kp('E');
+            else if (e.key === 'Escape' || e.key === 'Backspace') kp('C');
+        });
+    </script>
+
+>>>>>>> f90fc7f234e12faa23f78c1dfe06b5c54cb48b31
 </body>
 </html>
