@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<<<<<<< HEAD
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>NexoATM — Panel de Control</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -62,24 +63,108 @@ body{font-family:'DM Sans',sans-serif;background:#0b0f1a;color:#e4e8f1;min-heigh
 <div class="header"><div><h1>📊 NexoATM Dashboard</h1><div class="sub">Panel de control, monitoreo y Teoría de Decisiones</div></div></div>
 
 <div class="stats-row">
+=======
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexoATM — Panel de Administración</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#0b0f1a;color:#e4e8f1;min-height:100vh;padding:20px}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .header h1{font-family:'JetBrains Mono',monospace;font-size:20px;background:linear-gradient(135deg,#00d4ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .header .sub{font-size:11px;color:#4a5270;margin-top:3px}
+  .atm-link{padding:8px 16px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:8px;color:#00d4ff;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:11px}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+  .stat-box{background:#141929;border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+  .stat-box::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px}
+  .stat-box:nth-child(1)::before{background:linear-gradient(90deg,#00d4ff,transparent)}
+  .stat-box:nth-child(2)::before{background:linear-gradient(90deg,#00ff88,transparent)}
+  .stat-box:nth-child(3)::before{background:linear-gradient(90deg,#ff8c00,transparent)}
+  .stat-box:nth-child(4)::before{background:linear-gradient(90deg,#a855f7,transparent)}
+  .stat-box .label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#4a5270;margin-bottom:4px}
+  .stat-box .value{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700}
+  .grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  .panel{background:#141929;border:1px solid rgba(255,255,255,0.05);border-radius:14px;overflow:hidden}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;font-weight:700}
+  .panel-body{padding:14px;max-height:380px;overflow-y:auto}
+  .panel-body::-webkit-scrollbar{width:3px}
+  .panel-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+  .tx-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+  .tx-row:last-child{border:none}
+  .tx-row .tx-left{display:flex;align-items:center;gap:8px}
+  .tx-row .tx-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .tx-row .tx-type{font-size:11px;font-weight:600}
+  .tx-row .tx-meta{font-size:9px;color:#4a5270;font-family:'JetBrains Mono',monospace}
+  .tx-row .tx-amount{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+  .tx-neg{color:#ff4466} .tx-pos{color:#00dd77}
+  .bank-stat{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+  .bank-dot{width:8px;height:8px;border-radius:50%}
+  .bank-stat .bank-name{flex:1;font-size:12px}
+  .bank-stat .bank-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+  .refresh-btn{padding:5px 12px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.15);border-radius:6px;color:#00d4ff;font-family:'JetBrains Mono',monospace;font-size:9px;cursor:pointer}
+  .audit-line{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 0;color:#5a6280;line-height:1.7}
+  .audit-line.success{color:#00dd77}.audit-line.warning{color:#ffbb33}.audit-line.error{color:#ff4466}.audit-line.info{color:#44aaff}
+
+  /* Teoría de Decisiones */
+  .decision-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:12px;margin-bottom:8px}
+  .decision-card .d-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .decision-card .d-type{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
+  .decision-card .d-result{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px}
+  .d-approved{background:rgba(0,220,100,0.1);color:#00dd77}
+  .d-denied{background:rgba(255,50,80,0.1);color:#ff4466}
+  .criteria-bar{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px}
+  .criteria-bar .c-name{width:120px;font-family:'JetBrains Mono',monospace;color:#7a82a0}
+  .criteria-bar .c-bar{flex:1;height:6px;background:#1a1f35;border-radius:3px;overflow:hidden}
+  .criteria-bar .c-fill{height:100%;border-radius:3px;transition:width 0.3s}
+  .criteria-bar .c-pass{background:#00dd77}
+  .criteria-bar .c-fail{background:#ff4466}
+  .criteria-bar .c-weight{width:30px;text-align:right;font-family:'JetBrains Mono',monospace;color:#4a5270}
+  .d-score{font-family:'JetBrains Mono',monospace;font-size:10px;color:#5a6280;margin-top:6px}
+  .d-time{font-size:9px;color:#3a4060}
+
+  .empty{text-align:center;padding:30px 0;color:#3a4060;font-size:12px}
+  .tabs{display:flex;gap:4px;margin-bottom:16px}
+  .tab{padding:8px 16px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#7a82a0;transition:all 0.2s}
+  .tab.active{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.2);color:#00d4ff}
+
+  @media(max-width:768px){.grid-2col{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📊 NexoATM Dashboard</h1>
+    <div class="sub">Panel de administración, monitoreo y Teoría de Decisiones</div>
+  </div>
+  <a href="index.html" class="atm-link">🏧 Ir al Cajero</a>
+</div>
+
+<div class="stats-row" id="statsRow">
+>>>>>>> b7c1a06386a779af52f4d1b04e9e4731c2491363
   <div class="stat-box"><div class="label">Transacciones Hoy</div><div class="value" id="sTxCount">--</div></div>
   <div class="stat-box"><div class="label">Monto Total Hoy</div><div class="value" id="sTxTotal">--</div></div>
   <div class="stat-box"><div class="label">Tarjetas Activas</div><div class="value" id="sCards">--</div></div>
   <div class="stat-box"><div class="label">Redes Soportadas</div><div class="value">3</div></div>
 </div>
 
+<<<<<<< HEAD
 <!-- Charts -->
 <div class="grid-2">
   <div class="panel"><div class="panel-head"><span>📈 Transacciones por Hora</span></div><div class="panel-body"><div class="chart-container"><canvas id="hourlyChart"></canvas></div></div></div>
   <div class="panel"><div class="panel-head"><span>🍩 Distribución por Tipo</span></div><div class="panel-body"><div class="chart-container"><canvas id="typeChart"></canvas></div></div></div>
 </div>
 
+=======
+<!-- Tabs -->
+>>>>>>> b7c1a06386a779af52f4d1b04e9e4731c2491363
 <div class="tabs">
   <div class="tab active" onclick="showTab('transactions',this)">📜 Transacciones</div>
   <div class="tab" onclick="showTab('decisions',this)">🧠 Decisiones</div>
   <div class="tab" onclick="showTab('audit',this)">📋 Auditoría</div>
 </div>
 
+<<<<<<< HEAD
 <div id="tab-transactions">
   <div class="grid-2">
     <div class="panel"><div class="panel-head"><span>Transacciones Recientes</span><button class="refresh-btn" onclick="loadStats()">↻</button></div><div class="panel-body" id="recentTxPanel"><div class="empty">Cargando...</div></div></div>
@@ -91,10 +176,44 @@ body{font-family:'DM Sans',sans-serif;background:#0b0f1a;color:#e4e8f1;min-heigh
 </div>
 <div id="tab-audit" style="display:none">
   <div class="panel"><div class="panel-head"><span>Log de Auditoría</span><button class="refresh-btn" onclick="loadAudit()">↻</button></div><div class="panel-body" id="auditPanel" style="max-height:500px"><div class="empty">Cargando...</div></div></div>
+=======
+<!-- Tab: Transactions -->
+<div id="tab-transactions">
+  <div class="grid-2col">
+    <div class="panel">
+      <div class="panel-head"><span>Transacciones Recientes</span><button class="refresh-btn" onclick="loadStats()">↻</button></div>
+      <div class="panel-body" id="recentTxPanel"><div class="empty">Cargando...</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span>Actividad por Banco</span></div>
+      <div class="panel-body" id="bankStatsPanel"><div class="empty">Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Decision Theory -->
+<div id="tab-decisions" style="display:none">
+  <div class="panel">
+    <div class="panel-head">
+      <span>🧠 Registro de Teoría de Decisiones</span>
+      <button class="refresh-btn" onclick="loadDecisions()">↻</button>
+    </div>
+    <div class="panel-body" id="decisionsPanel" style="max-height:600px"><div class="empty">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- Tab: Audit -->
+<div id="tab-audit" style="display:none">
+  <div class="panel">
+    <div class="panel-head"><span>Log de Auditoría</span><button class="refresh-btn" onclick="loadAudit()">↻</button></div>
+    <div class="panel-body" id="auditPanel" style="max-height:500px"><div class="empty">Cargando...</div></div>
+  </div>
+>>>>>>> b7c1a06386a779af52f4d1b04e9e4731c2491363
 </div>
 
 <script>
 const API='api/api.php';
+<<<<<<< HEAD
 let hourlyChartInstance,typeChartInstance;
 
 function showTab(n,el){document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).style.display='block';el.classList.add('active');if(n==='decisions')loadDecisions();if(n==='audit')loadAudit()}
@@ -102,10 +221,34 @@ async function apiFetch(a,p={}){let u=`${API}?action=${a}`;Object.entries(p).for
 
 async function loadStats(){
   const data=await apiFetch('get_stats');if(!data.success)return;const s=data.stats;
+=======
+
+function showTab(name, el) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display='none');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+name).style.display='block';
+  el.classList.add('active');
+  if (name==='decisions') loadDecisions();
+  if (name==='audit') loadAudit();
+}
+
+async function apiFetch(action, params={}) {
+  let url=`${API}?action=${action}`;
+  Object.entries(params).forEach(([k,v])=>url+=`&${k}=${encodeURIComponent(v)}`);
+  const r=await fetch(url);
+  return await r.json();
+}
+
+async function loadStats() {
+  const data=await apiFetch('get_stats');
+  if(!data.success)return;
+  const s=data.stats;
+>>>>>>> b7c1a06386a779af52f4d1b04e9e4731c2491363
   document.getElementById('sTxCount').textContent=s.today_count;
   document.getElementById('sTxTotal').textContent='Bs '+parseFloat(s.today_total).toLocaleString('es-BO',{minimumFractionDigits:2});
   document.getElementById('sCards').textContent=s.active_cards;
 
+<<<<<<< HEAD
   // Hourly chart
   const hours=Array.from({length:24},(_,i)=>i);
   const hourData=hours.map(h=>{const found=s.hourly?.find(x=>parseInt(x.h)===h);return found?parseInt(found.c):0});
@@ -143,6 +286,70 @@ async function loadDecisions(){
 async function loadAudit(){const data=await apiFetch('get_audit_log',{limit:50});const p=document.getElementById('auditPanel');if(!data.success||!data.logs.length){p.innerHTML='<div class="empty">Sin registros</div>';return}p.innerHTML=data.logs.map(l=>`<div class="audit-line ${l.level}">[${l.created_at}] [${l.level.toUpperCase()}] ${l.message}</div>`).join('')}
 
 loadStats();loadAudit();setInterval(loadStats,15000);
+=======
+  const txP=document.getElementById('recentTxPanel');
+  if(s.recent_transactions.length===0){txP.innerHTML='<div class="empty">Sin transacciones</div>';return}
+
+  const icons={withdrawal:'💸',deposit:'💰',transfer:'🔄',balance_inquiry:'👁️',pin_change:'🔑'};
+  const labels={withdrawal:'Retiro',deposit:'Depósito',transfer:'Transferencia',balance_inquiry:'Consulta',pin_change:'Cambio PIN'};
+  const colors={withdrawal:'rgba(255,68,102,0.1)',deposit:'rgba(0,221,119,0.1)',transfer:'rgba(0,187,255,0.1)',balance_inquiry:'rgba(168,85,247,0.1)',pin_change:'rgba(255,180,0,0.1)'};
+
+  txP.innerHTML=s.recent_transactions.map(tx=>{
+    const neg=tx.tx_type==='withdrawal'||tx.tx_type==='transfer';
+    const amt=tx.amount?`${neg?'-':'+'}Bs ${parseFloat(tx.amount).toLocaleString('es-BO',{minimumFractionDigits:2})}`:'--';
+    return `<div class="tx-row"><div class="tx-left"><div class="tx-icon" style="background:${colors[tx.tx_type]||'#222'}">${icons[tx.tx_type]||'📝'}</div><div><div class="tx-type">${labels[tx.tx_type]||tx.tx_type} — ${tx.bank_name}</div><div class="tx-meta">${tx.tx_code} | ****${tx.card_number.slice(-4)} | ${tx.created_at}</div></div></div><div class="tx-amount ${neg?'tx-neg':'tx-pos'}">${amt}</div></div>`;
+  }).join('');
+
+  const bP=document.getElementById('bankStatsPanel');
+  bP.innerHTML=s.bank_stats.map(b=>`<div class="bank-stat"><div class="bank-dot" style="background:${b.primary_color}"></div><div class="bank-name">${b.short_name}</div><div class="bank-val">${b.tx_count} tx | Bs ${parseFloat(b.tx_total).toLocaleString('es-BO',{minimumFractionDigits:2})}</div></div>`).join('');
+
+  if(s.network_stats.length){
+    const nc={visa:'#6680ff',mastercard:'#ff6677',amex:'#44aaff'};
+    bP.innerHTML+='<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.04);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#4a5270;margin-bottom:6px;">Tarjetas por Red</div>';
+    s.network_stats.forEach(n=>{bP.innerHTML+=`<div class="bank-stat"><div class="bank-dot" style="background:${nc[n.code]||'#666'}"></div><div class="bank-name">${n.name}</div><div class="bank-val">${n.card_count}</div></div>`});
+  }
+}
+
+// ─── TEORÍA DE DECISIONES ───
+async function loadDecisions() {
+  const data=await apiFetch('get_decision_log',{limit:30});
+  const panel=document.getElementById('decisionsPanel');
+  if(!data.success||!data.decisions.length){panel.innerHTML='<div class="empty">Sin decisiones registradas. Realice operaciones en el cajero.</div>';return}
+
+  const typeLabels={pin_auth:'🔐 Autenticación PIN',withdrawal_auth:'💸 Autorización Retiro',deposit_auth:'💰 Autorización Depósito',transfer_auth:'🔄 Autorización Transferencia'};
+
+  panel.innerHTML=data.decisions.map(d=>{
+    const criteria=d.criteria_evaluated||[];
+    const bars=criteria.map(c=>{
+      const pct=c.passed?100:0;
+      const cls=c.passed?'c-pass':'c-fail';
+      return `<div class="criteria-bar"><span class="c-name">${c.name}</span><div class="c-bar"><div class="c-fill ${cls}" style="width:${pct}%"></div></div><span class="c-weight">${c.weight}</span></div>`;
+    }).join('');
+
+    return `
+      <div class="decision-card">
+        <div class="d-header">
+          <span class="d-type">${typeLabels[d.decision_type]||d.decision_type}</span>
+          <span class="d-result ${d.decision_result==='APPROVED'?'d-approved':'d-denied'}">${d.decision_result}</span>
+        </div>
+        ${bars}
+        <div class="d-score">Score: ${d.total_score}/${d.threshold} | ${d.denial_reason||'Todos los criterios cumplidos'}</div>
+        <div class="d-time">${d.created_at} | ${d.processing_time_ms}ms | Card ID: ${d.card_id||'N/A'}</div>
+      </div>`;
+  }).join('');
+}
+
+async function loadAudit() {
+  const data=await apiFetch('get_audit_log',{limit:50});
+  const panel=document.getElementById('auditPanel');
+  if(!data.success||!data.logs.length){panel.innerHTML='<div class="empty">Sin registros</div>';return}
+  panel.innerHTML=data.logs.map(l=>`<div class="audit-line ${l.level}">[${l.created_at}] [${l.level.toUpperCase()}] ${l.message}</div>`).join('');
+}
+
+loadStats();
+loadAudit();
+setInterval(loadStats,15000);
+>>>>>>> b7c1a06386a779af52f4d1b04e9e4731c2491363
 </script>
 </body>
 </html>

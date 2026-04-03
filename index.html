@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<<<<<<< HEAD
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>NexoATM — Cajero Automático Universal</title>
 <link rel="stylesheet" href="css/atm.css">
@@ -197,11 +198,262 @@
           <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="another_op">Otra Op.</button>
           <button class="act-btn act-secondary" onclick="printReceipt()" data-lang="print_receipt">Imprimir</button>
           <button class="act-btn act-primary" onclick="ejectCard()" data-lang="eject_card">Salir</button>
+=======
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexoATM — Cajero Automático Universal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atm.css">
+</head>
+<body>
+
+<div class="toast-box" id="toastBox"></div>
+
+<div class="atm-machine" id="atmMachine">
+  <div class="atm-strip" id="atmStrip"></div>
+
+  <div class="atm-display">
+    <!-- Status Bar con idioma (RF-9) -->
+    <div class="status-bar">
+      <div><span class="status-dot"></span> NexoATM v2.0</div>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btnES" onclick="setLang('es'); document.getElementById('btnES').classList.add('active'); document.getElementById('btnEN').classList.remove('active');">ES</button>
+        <button class="lang-btn" id="btnEN" onclick="setLang('en'); document.getElementById('btnEN').classList.add('active'); document.getElementById('btnES').classList.remove('active');">EN</button>
+      </div>
+      <div id="clockDisplay">--:--:--</div>
+    </div>
+
+    <div class="screen-content" id="screenContent">
+
+      <!-- ═══ IDLE ═══ -->
+      <div class="view active" id="view-idle">
+        <div class="welcome-logo">
+          <div class="uni-icon">N</div>
+          <h2>NexoATM</h2>
+          <p data-lang="subtitle">Cajero Automático Universal</p>
+        </div>
+        <div class="insert-prompt" onclick="goTo('bank-select')">
+          <div class="icon">💳</div>
+          <div class="label" data-lang="insert_card">Toque para insertar su tarjeta</div>
+          <div class="sub" data-lang="compatible">Compatible con todas las redes bancarias</div>
+        </div>
+        <div class="network-badges">
+          <span class="network-badge" style="color:#6680ff">VISA</span>
+          <span class="network-badge" style="color:#ff6677">MC</span>
+          <span class="network-badge" style="color:#44aaff">AMEX</span>
+        </div>
+        <div class="bottom-links">
+          <a href="#" onclick="loadRegisterBanks(); goTo('register');" data-lang="register_btn">Registrar</a>
+          <a href="dashboard.html" data-lang="go_dashboard">Panel Admin</a>
+        </div>
+      </div>
+
+      <!-- ═══ BANK SELECT ═══ -->
+      <div class="view" id="view-bank-select">
+        <div class="section-title" data-lang="select_bank">Seleccione su banco</div>
+        <div id="bankList"><div class="small-text" style="padding:30px 0;">Cargando...</div></div>
+        <div class="actions-row" style="margin-top:14px;">
+          <button class="act-btn act-secondary" onclick="goTo('idle')" data-lang="cancel">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- ═══ CARD SELECT ═══ -->
+      <div class="view" id="view-card-select">
+        <div class="back-link" onclick="goTo('bank-select')" data-lang="change_bank">← Cambiar banco</div>
+        <div class="bank-header" id="cardSelectHeader"></div>
+        <div class="section-title" data-lang="select_card">Seleccione su tarjeta</div>
+        <div id="cardList"><div class="small-text" style="padding:24px 0;">Cargando...</div></div>
+        <div class="actions-row"><button class="act-btn act-danger" onclick="ejectCard()" data-lang="cancel">Cancelar</button></div>
+      </div>
+
+      <!-- ═══ PIN ENTRY (RF-1, RF-2) ═══ -->
+      <div class="view" id="view-pin">
+        <div class="bank-header"></div>
+        <p class="pin-message" data-lang="enter_pin">Ingrese su PIN de 4 dígitos</p>
+        <div class="pin-dots" id="pinDots">
+          <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+        <p class="pin-message" id="pinStatus"></p>
+        <div class="actions-row"><button class="act-btn act-danger" onclick="ejectCard()" data-lang="cancel">Cancelar</button></div>
+      </div>
+
+      <!-- ═══ MENU (RF-13) ═══ -->
+      <div class="view" id="view-menu">
+        <div class="bank-header"></div>
+        <p id="welcomeUser" class="center-text" style="font-size:12px;color:#7a82a0;margin-bottom:14px;"></p>
+        <div class="menu-grid">
+          <div class="menu-option" onclick="goToOperation('withdrawal')">
+            <div class="m-icon">💸</div><div class="m-label" data-lang="withdrawal">Retiro</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('deposit')">
+            <div class="m-icon">💰</div><div class="m-label" data-lang="deposit">Depósito</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('transfer')">
+            <div class="m-icon">🔄</div><div class="m-label" data-lang="transfer">Transferencia</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('balance')">
+            <div class="m-icon">👁️</div><div class="m-label" data-lang="balance">Saldo</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('pin_change')">
+            <div class="m-icon">🔑</div><div class="m-label" data-lang="pin_change">Cambio PIN</div>
+          </div>
+          <div class="menu-option" onclick="goToOperation('history')">
+            <div class="m-icon">📜</div><div class="m-label" data-lang="history">Historial</div>
+          </div>
+        </div>
+        <div class="actions-row" style="margin-top:14px;">
+          <button class="act-btn act-danger" onclick="ejectCard()" data-lang="eject_card">Retirar Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- ═══ WITHDRAWAL (RF-4) ═══ -->
+      <div class="view" id="view-withdrawal">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="withdrawal_title">Retiro de efectivo</div>
+        <div class="amount-display">
+          <span class="currency">Bs</span>
+          <div class="value" id="wAmount">0</div>
+        </div>
+        <div class="quick-grid">
+          <div class="quick-btn" onclick="setQuick(100)">Bs 100</div>
+          <div class="quick-btn" onclick="setQuick(200)">Bs 200</div>
+          <div class="quick-btn" onclick="setQuick(500)">Bs 500</div>
+          <div class="quick-btn" onclick="setQuick(1000)">Bs 1,000</div>
+          <div class="quick-btn" onclick="setQuick(1500)">Bs 1,500</div>
+          <div class="quick-btn" onclick="setQuick(2000)">Bs 2,000</div>
+        </div>
+        <p class="small-text" data-lang="use_keypad">O use el teclado para otro monto</p>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitWithdrawal()" data-lang="confirm">Confirmar</button>
+        </div>
+      </div>
+
+      <!-- ═══ DEPOSIT (RF-5) ═══ -->
+      <div class="view" id="view-deposit">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="deposit_title">Depósito de efectivo</div>
+        <div class="amount-display">
+          <span class="currency">Bs</span>
+          <div class="value" id="dAmount">0</div>
+        </div>
+        <div class="quick-grid">
+          <div class="quick-btn" onclick="setQuick(100)">Bs 100</div>
+          <div class="quick-btn" onclick="setQuick(500)">Bs 500</div>
+          <div class="quick-btn" onclick="setQuick(1000)">Bs 1,000</div>
+          <div class="quick-btn" onclick="setQuick(2000)">Bs 2,000</div>
+          <div class="quick-btn" onclick="setQuick(5000)">Bs 5,000</div>
+          <div class="quick-btn" onclick="setQuick(10000)">Bs 10,000</div>
+        </div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitDeposit()" data-lang="confirm">Confirmar</button>
+        </div>
+      </div>
+
+      <!-- ═══ TRANSFER (RF-6) ═══ -->
+      <div class="view" id="view-transfer">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="transfer_title">Transferencia</div>
+        <select class="atm-input" id="transferTarget">
+          <option value="" data-lang="select_target">— Seleccione cuenta destino —</option>
+        </select>
+        <div class="amount-display">
+          <span class="currency">Bs</span>
+          <div class="value" id="tAmount">0</div>
+        </div>
+        <p class="small-text" data-lang="enter_amount_keypad">Use el teclado para ingresar el monto</p>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitTransfer()" data-lang="transfer_btn">Transferir</button>
+        </div>
+      </div>
+
+      <!-- ═══ BALANCE (RF-3) ═══ -->
+      <div class="view" id="view-balance">
+        <div class="bank-header"></div>
+        <div class="balance-show">
+          <div class="lbl" data-lang="available_balance">Saldo Disponible</div>
+          <div class="amt" id="balanceAmount">--</div>
+          <div class="extra" id="balanceExtra"></div>
+        </div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="main_menu">Menú Principal</button>
+          <button class="act-btn act-danger" onclick="ejectCard()" data-lang="eject_card">Retirar Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- ═══ PIN CHANGE (RF-7) ═══ -->
+      <div class="view" id="view-pin-change">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="pin_change_title">Cambio de PIN</div>
+        <label class="form-label" data-lang="current_pin">PIN Actual</label>
+        <input type="password" class="atm-input" id="currentPinInput" maxlength="4" inputmode="numeric" placeholder="****">
+        <label class="form-label" data-lang="new_pin">Nuevo PIN</label>
+        <input type="password" class="atm-input" id="newPinInput" maxlength="4" inputmode="numeric" placeholder="****">
+        <label class="form-label" data-lang="confirm_new_pin">Confirmar Nuevo PIN</label>
+        <input type="password" class="atm-input" id="confirmPinInput" maxlength="4" inputmode="numeric" placeholder="****">
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+          <button class="act-btn act-primary" onclick="submitPinChange()" data-lang="change_btn">Cambiar PIN</button>
+        </div>
+      </div>
+
+      <!-- ═══ HISTORY (RF-8) ═══ -->
+      <div class="view" id="view-history">
+        <div class="bank-header"></div>
+        <div class="section-title" data-lang="history_title">Últimos Movimientos</div>
+        <div id="historyList"><div class="small-text" style="padding:20px 0;">Cargando...</div></div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="menu">← Menú</button>
+        </div>
+      </div>
+
+      <!-- ═══ PROCESSING ═══ -->
+      <div class="view" id="view-processing">
+        <div class="processing-view">
+          <div class="spinner"></div>
+          <p data-lang="processing">Procesando operación...</p>
+          <p class="small-text" data-lang="dont_remove">No retire su tarjeta</p>
+        </div>
+      </div>
+
+      <!-- ═══ RECEIPT (RF-10) ═══ -->
+      <div class="view" id="view-receipt">
+        <div class="center-text">
+          <div class="success-mark">✓</div>
+          <p style="font-size:14px;font-weight:700;color:#00dd77;margin-bottom:12px;" data-lang="success">Operación Exitosa</p>
+        </div>
+        <div class="receipt-paper" id="receiptContent"></div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('menu')" data-lang="another_op">Otra Operación</button>
+          <button class="act-btn act-secondary" onclick="printReceipt()" data-lang="print_receipt">Imprimir</button>
+          <button class="act-btn act-primary" onclick="ejectCard()" data-lang="eject_card">Retirar Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- ═══ REGISTER (RF-15) ═══ -->
+      <div class="view" id="view-register">
+        <div class="section-title" data-lang="register_title">Registro de Nueva Cuenta</div>
+        <label class="form-label" data-lang="ci_label">Carnet de Identidad</label>
+        <input type="text" class="atm-input" id="regCI" maxlength="10" placeholder="Ej: 7654321">
+        <label class="form-label" data-lang="first_name">Nombre(s)</label>
+        <input type="text" class="atm-input" id="regFirstName" placeholder="Ej: Juan Carlos">
+        <label class="form-label" data-lang="last_name">Apellido(s)</label>
+        <input type="text" class="atm-input" id="regLastName" placeholder="Ej: Mamani Quispe">
+        <label class="form-label" data-lang="select_bank_reg">Banco</label>
+        <select class="atm-input" id="regBank"><option value="">Cargando...</option></select>
+        <label class="form-label" data-lang="pin_label">PIN (4 dígitos)</label>
+        <input type="password" class="atm-input" id="regPin" maxlength="4" inputmode="numeric" placeholder="****">
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="goTo('idle')" data-lang="back_login">← Volver</button>
+          <button class="act-btn act-primary" onclick="submitRegister()" data-lang="register_btn">Registrar</button>
+>>>>>>> b7c1a06386a779af52f4d1b04e9e4731c2491363
         </div>
       </div>
 
     </div>
 
+<<<<<<< HEAD
     <!-- CONFIRM OVERLAY -->
     <div class="confirm-overlay" id="confirmOverlay"><div class="confirm-box"><div class="c-icon">⚠️</div><div class="c-title" data-lang="confirm_title">¿Confirmar?</div><div id="confirmMessage" class="small-text"></div><div class="c-detail" id="confirmDetail">Bs 0.00</div><div class="actions-row"><button class="act-btn act-secondary" onclick="confirmNo()" data-lang="no">No</button><button class="act-btn act-primary" onclick="confirmYes()" data-lang="yes">Sí</button></div></div></div>
 
@@ -230,5 +482,843 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 <script src="js/lang.js?v=3"></script>
 <script src="js/app.js?v=3"></script>
+=======
+    <!-- RF-14: Confirmación overlay -->
+    <div class="confirm-overlay" id="confirmOverlay">
+      <div class="confirm-box">
+        <div class="c-icon">⚠️</div>
+        <div class="c-title" data-lang="confirm_title">¿Confirmar operación?</div>
+        <div id="confirmMessage" class="small-text"></div>
+        <div class="c-detail" id="confirmDetail">Bs 0.00</div>
+        <div class="actions-row">
+          <button class="act-btn act-secondary" onclick="confirmNo()" data-lang="no">No, cancelar</button>
+          <button class="act-btn act-primary" onclick="confirmYes()" data-lang="yes">Sí, confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RF-11: Barra de inactividad -->
+    <div class="inactivity-bar" id="inactivityBar"></div>
+  </div>
+
+  <div class="card-slot-physical">
+    <div class="slot-glow"></div>
+    <span data-lang="insert_label">▸ INSERTAR TARJETA ◂</span>
+  </div>
+
+  <div class="atm-keypad-area">
+    <div class="keypad-grid">
+      <button class="key-btn" onclick="keyPress('1')">1</button>
+      <button class="key-btn" onclick="keyPress('2')">2</button>
+      <button class="key-btn" onclick="keyPress('3')">3</button>
+      <button class="key-btn" onclick="keyPress('4')">4</button>
+      <button class="key-btn" onclick="keyPress('5')">5</button>
+      <button class="key-btn" onclick="keyPress('6')">6</button>
+      <button class="key-btn" onclick="keyPress('7')">7</button>
+      <button class="key-btn" onclick="keyPress('8')">8</button>
+      <button class="key-btn" onclick="keyPress('9')">9</button>
+      <button class="key-btn fn-red" onclick="keyCancel()">CANCEL</button>
+      <button class="key-btn" onclick="keyPress('0')">0</button>
+      <button class="key-btn fn-green" onclick="keyEnter()">ENTER</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts separados -->
+<script src="js/lang.js"></script>
+<script src="js/app.js"></script>
+=======
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIT-BANK ATM v3.0</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon: #00ff41;
+            --neon-dim: #00aa2a;
+            --dark: #001a00;
+            --screen: #0a0e0a;
+            --danger: #ff4444;
+            --warn: #ffaa00;
+            --info: #44aaff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            background-image:
+                radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, transparent 60%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 65, 0.015) 2px, rgba(0, 255, 65, 0.015) 4px);
+            color: var(--neon);
+            font-family: 'VT323', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        #machine-wrap {
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            padding: 28px;
+            border: 3px solid #555;
+            border-radius: 18px;
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.9),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            text-align: center;
+            position: relative;
+        }
+
+        /* Logo strip */
+        #machine-wrap::before {
+            content: "◆ BIT-BANK ◆";
+            display: block;
+            font-size: 1rem;
+            color: #888;
+            letter-spacing: 8px;
+            margin-bottom: 15px;
+            padding: 6px;
+            background: #111;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        #screen {
+            width: 520px;
+            min-height: 400px;
+            background: var(--screen);
+            border: 10px solid #111;
+            border-radius: 6px;
+            position: relative;
+            padding: 24px;
+            overflow: hidden;
+            box-shadow:
+                inset 0 0 50px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(0, 255, 65, 0.05);
+        }
+
+        /* Scanlines */
+        #screen::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.08) 50%
+            );
+            background-size: 100% 3px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* CRT curvature */
+        #screen::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, transparent 65%, rgba(0,0,0,0.3) 100%);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .view {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            text-transform: uppercase;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active { display: flex; }
+
+        h1 { font-size: 2.2rem; margin-bottom: 5px; text-shadow: 0 0 10px var(--neon); }
+        h2 { font-size: 1.6rem; margin-bottom: 10px; text-shadow: 0 0 8px var(--neon); }
+        h3 { font-size: 1.3rem; margin-bottom: 5px; }
+
+        /* Inputs */
+        .field-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--neon);
+            color: var(--neon);
+            font-family: 'VT323', monospace;
+            font-size: 1.6rem;
+            text-align: center;
+            width: 85%;
+            outline: none;
+            margin: 8px auto;
+            letter-spacing: 4px;
+        }
+
+        .field-input::placeholder {
+            color: var(--neon-dim);
+            opacity: 0.4;
+        }
+
+        /* Pinpad */
+        #pinpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 18px;
+            background: #151515;
+            padding: 16px;
+            border-radius: 10px;
+            border: 2px solid #333;
+        }
+
+        .key {
+            width: 65px;
+            height: 48px;
+            background: linear-gradient(180deg, #555 0%, #3a3a3a 100%);
+            border: none;
+            color: white;
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 5px;
+            border-bottom: 4px solid #222;
+            transition: all 0.1s;
+        }
+
+        .key:active {
+            transform: translateY(3px);
+            border-bottom: 1px solid #222;
+        }
+
+        .key:hover { background: linear-gradient(180deg, #666 0%, #4a4a4a 100%); }
+        .key.red { background: linear-gradient(180deg, #aa3333 0%, #882222 100%); }
+        .key.red:hover { background: linear-gradient(180deg, #cc4444 0%, #aa3333 100%); }
+        .key.green { background: linear-gradient(180deg, #33aa33 0%, #228822 100%); }
+        .key.green:hover { background: linear-gradient(180deg, #44cc44 0%, #33aa33 100%); }
+
+        /* Botones de pantalla */
+        .btn-opt {
+            background: var(--dark);
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            padding: 10px 14px;
+            margin: 4px;
+            cursor: pointer;
+            font-family: 'VT323', monospace;
+            font-size: 1.15rem;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .btn-opt:hover {
+            background: var(--neon);
+            color: var(--dark);
+            box-shadow: 0 0 10px var(--neon);
+        }
+
+        .btn-opt.danger {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .btn-opt.danger:hover {
+            background: var(--danger);
+            color: #000;
+            box-shadow: 0 0 10px var(--danger);
+        }
+
+        /* Mensajes */
+        .msg-error { color: var(--danger); font-size: 1rem; min-height: 1.2em; }
+        .msg-success { color: var(--neon); font-size: 1rem; }
+        .msg-warn { color: var(--warn); font-size: 1rem; }
+        .msg-info { color: var(--info); font-size: 0.95rem; }
+
+        /* Display grande */
+        .big-display {
+            font-size: 3rem;
+            margin: 15px 0;
+            letter-spacing: 8px;
+            text-shadow: 0 0 15px var(--neon);
+        }
+
+        .amount-display {
+            font-size: 2.5rem;
+            color: white;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* Menu grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 10px 0;
+        }
+
+        /* Saldo display */
+        .saldo-line {
+            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+        .saldo-line span { color: white; font-size: 1.4rem; }
+
+        /* Historial */
+        .history-box {
+            font-size: 0.85rem;
+            text-align: left;
+            border-top: 1px dashed var(--neon-dim);
+            margin-top: 8px;
+            padding-top: 6px;
+            max-height: 90px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        .history-box::-webkit-scrollbar { width: 4px; }
+        .history-box::-webkit-scrollbar-thumb { background: var(--neon-dim); border-radius: 2px; }
+
+        /* Movimientos lista */
+        .mov-list {
+            text-align: left;
+            font-size: 0.9rem;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .mov-item {
+            padding: 5px 0;
+            border-bottom: 1px dotted #1a3a1a;
+        }
+
+        .mov-item .tipo-retiro { color: var(--danger); }
+        .mov-item .tipo-deposito { color: var(--neon); }
+
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Card slot visual */
+        #card-slot {
+            width: 180px;
+            height: 8px;
+            background: #000;
+            margin: 10px auto 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Footer text */
+        .footer-text {
+            font-size: 0.7rem;
+            color: #555;
+            margin-top: 12px;
+        }
+
+        /* Retiro rápido botones */
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="machine-wrap">
+        <div id="screen">
+
+            <!-- ========== PANTALLA INICIO ========== -->
+            <div id="v-start" class="view active">
+                <h1>BIT-BANK</h1>
+                <p style="font-size: 1.1rem; color: #888;">SISTEMA ATM v3.0</p>
+                <p style="margin-top: 8px;">🔒 SISTEMA DE SEGURIDAD ACTIVADO</p>
+                <div style="margin-top: 40px;">
+                    <button class="btn-opt" onclick="initAudioAndStart()" style="font-size: 1.4rem; padding: 14px 30px;">
+                        [ INSERTAR TARJETA ]
+                    </button>
+                </div>
+                <p class="footer-text" style="margin-top: 60px;">
+                    SOPORTE: 01-800-BITBANK | Laboratorio 3
+                </p>
+            </div>
+
+            <!-- ========== PANTALLA LOGIN ========== -->
+            <div id="v-login" class="view">
+                <h2>IDENTIFICACIÓN</h2>
+                <p style="font-size: 0.95rem; color: #888; margin-bottom: 10px;">INGRESE NÚMERO DE TARJETA:</p>
+                <input type="text" id="input-tarjeta" class="field-input" maxlength="16" placeholder="0000000000000000">
+                <p style="font-size: 0.95rem; color: #888; margin-top: 10px;">INGRESE PIN (4 DÍGITOS):</p>
+                <div id="pin-display" class="big-display">____</div>
+                <p id="login-msg" class="msg-error"></p>
+                <p style="font-size: 0.8rem; color: #555;">USE EL PINPAD PARA EL PIN · ENT PARA CONFIRMAR</p>
+            </div>
+
+            <!-- ========== MENÚ PRINCIPAL ========== -->
+            <div id="v-menu" class="view">
+                <h3 id="u-name">AGENTE: ---</h3>
+                <p class="saldo-line">SALDO: <span id="u-bal">$0.00</span></p>
+                <div class="menu-grid">
+                    <button class="btn-opt" onclick="goTo('v-withdraw')">1. RETIRO</button>
+                    <button class="btn-opt" onclick="goTo('v-deposit')">2. DEPÓSITO</button>
+                    <button class="btn-opt" onclick="goTo('v-history')">3. MOVIMIENTOS</button>
+                    <button class="btn-opt" onclick="consultarSaldo()">4. CONSULTAR SALDO</button>
+                </div>
+                <button class="btn-opt danger" onclick="logout()" style="width: 100%; margin-top: 4px;">
+                    ■ SALIR / RETIRAR TARJETA
+                </button>
+                <div id="menu-msg" class="msg-success" style="margin-top: 6px; min-height: 1.2em;"></div>
+                <div class="history-box" id="u-logs"></div>
+            </div>
+
+            <!-- ========== PANTALLA RETIRO ========== -->
+            <div id="v-withdraw" class="view">
+                <h2>RETIRAR EFECTIVO</h2>
+                <p style="font-size: 0.95rem; color: #888;">SELECCIONE MONTO RÁPIDO O INGRESE EN PINPAD:</p>
+                <div class="quick-amounts">
+                    <button class="btn-opt" onclick="retirar(50)">$50</button>
+                    <button class="btn-opt" onclick="retirar(100)">$100</button>
+                    <button class="btn-opt" onclick="retirar(200)">$200</button>
+                    <button class="btn-opt" onclick="retirar(500)">$500</button>
+                </div>
+                <p style="font-size: 0.9rem; color: #888; margin-top: 5px;">MONTO PERSONALIZADO:</p>
+                <div id="withdraw-amount" class="amount-display">$0</div>
+                <p id="withdraw-msg" class="msg-error"></p>
+                <button class="btn-opt" onclick="goTo('v-menu')">◄ VOLVER</button>
+            </div>
+
+            <!-- ========== PANTALLA DEPÓSITO ========== -->
+            <div id="v-deposit" class="view">
+                <h2>DEPOSITAR</h2>
+                <p style="font-size: 0.95rem; color: #888;">INGRESE MONTO EN EL PINPAD Y PULSE ENT:</p>
+                <div id="deposit-amount" class="amount-display">$0</div>
+                <p id="deposit-msg" class="msg-error"></p>
+                <button class="btn-opt" onclick="goTo('v-menu')">◄ CANCELAR</button>
+            </div>
+
+            <!-- ========== PANTALLA MOVIMIENTOS ========== -->
+            <div id="v-history" class="view">
+                <h2>ÚLTIMOS MOVIMIENTOS</h2>
+                <div id="mov-list" class="mov-list">
+                    <p class="loading">CARGANDO...</p>
+                </div>
+                <button class="btn-opt" onclick="goTo('v-menu')" style="margin-top: 10px;">◄ VOLVER</button>
+            </div>
+
+            <!-- ========== PANTALLA RESULTADO ========== -->
+            <div id="v-result" class="view" style="justify-content: center; align-items: center;">
+                <div id="result-icon" style="font-size: 3rem;"></div>
+                <p id="result-msg" style="font-size: 1.4rem; margin: 15px 0;"></p>
+                <p id="result-detail" style="font-size: 1rem; color: #888;"></p>
+                <button class="btn-opt" onclick="goTo('v-menu')" style="margin-top: 20px;">◄ CONTINUAR</button>
+            </div>
+
+        </div>
+
+        <!-- PINPAD FÍSICO -->
+        <div id="pinpad">
+            <button class="key" onclick="kp('1')">1</button>
+            <button class="key" onclick="kp('2')">2</button>
+            <button class="key" onclick="kp('3')">3</button>
+            <button class="key" onclick="kp('4')">4</button>
+            <button class="key" onclick="kp('5')">5</button>
+            <button class="key" onclick="kp('6')">6</button>
+            <button class="key" onclick="kp('7')">7</button>
+            <button class="key" onclick="kp('8')">8</button>
+            <button class="key" onclick="kp('9')">9</button>
+            <button class="key red" onclick="kp('C')">CLR</button>
+            <button class="key" onclick="kp('0')">0</button>
+            <button class="key green" onclick="kp('E')">ENT</button>
+        </div>
+
+        <div id="card-slot"></div>
+    </div>
+
+    <script>
+        // =============================================
+        // MOTOR DE AUDIO
+        // =============================================
+        let audioCtx = null;
+
+        function playSound(freq, type, duration, vol = 0.08) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(g);
+            g.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const sfx = {
+            key:     () => playSound(600, 'sine', 0.08),
+            enter:   () => playSound(880, 'square', 0.15),
+            error:   () => playSound(150, 'sawtooth', 0.35, 0.15),
+            success: () => { playSound(523, 'sine', 0.1); setTimeout(() => playSound(784, 'sine', 0.2), 100); },
+            cash:    () => { for (let i = 0; i < 8; i++) setTimeout(() => playSound(300 + i * 50, 'triangle', 0.1), i * 55); },
+            card:    () => { playSound(200, 'triangle', 0.15); setTimeout(() => playSound(400, 'triangle', 0.1), 150); },
+            logout:  () => { playSound(500, 'sine', 0.1); setTimeout(() => playSound(350, 'sine', 0.15), 120); }
+        };
+
+        // =============================================
+        // CONFIGURACIÓN
+        // =============================================
+        const API_URL = 'api'; // Ruta relativa a la carpeta api/
+
+        let currentView = 'v-start';
+        let currentPin = '';
+        let tempInput = '';
+        let usuarioActual = null;
+
+        // =============================================
+        // INICIALIZACIÓN
+        // =============================================
+        function initAudioAndStart() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            sfx.card();
+            goTo('v-login');
+            $('#input-tarjeta').focus();
+        }
+
+        // =============================================
+        // NAVEGACIÓN
+        // =============================================
+        function goTo(id) {
+            currentView = id;
+            tempInput = '';
+            currentPin = '';
+            $('.view').removeClass('active');
+            $('#' + id).addClass('active');
+
+            // Limpiar mensajes
+            $('.msg-error, .msg-success, .msg-warn').text('');
+
+            // Acciones al entrar a cada vista
+            if (id === 'v-login') {
+                updatePinDisplay();
+                $('#input-tarjeta').val('').focus();
+            }
+            if (id === 'v-menu') renderMenu();
+            if (id === 'v-withdraw') $('#withdraw-amount').text('$0');
+            if (id === 'v-deposit') $('#deposit-amount').text('$0');
+            if (id === 'v-history') cargarMovimientos();
+        }
+
+        // =============================================
+        // PINPAD
+        // =============================================
+        function kp(k) {
+            if (k === 'C') {
+                sfx.error();
+                tempInput = '';
+                currentPin = '';
+            } else if (k === 'E') {
+                handleEnter();
+                return;
+            } else {
+                sfx.key();
+                if (currentView === 'v-login') {
+                    if (currentPin.length < 4) currentPin += k;
+                } else {
+                    tempInput += k;
+                }
+            }
+            updateDisplays();
+        }
+
+        function updatePinDisplay() {
+            let dots = '';
+            for (let i = 0; i < 4; i++) dots += currentPin[i] ? '●' : '_';
+            $('#pin-display').text(dots);
+        }
+
+        function updateDisplays() {
+            updatePinDisplay();
+            if (currentView === 'v-withdraw') {
+                $('#withdraw-amount').text('$' + (tempInput || '0'));
+            }
+            if (currentView === 'v-deposit') {
+                $('#deposit-amount').text('$' + (tempInput || '0'));
+            }
+        }
+
+        // =============================================
+        // ENTER HANDLER
+        // =============================================
+        function handleEnter() {
+            sfx.enter();
+
+            if (currentView === 'v-login') {
+                intentarLogin();
+            } else if (currentView === 'v-withdraw' && tempInput) {
+                retirar(parseFloat(tempInput));
+            } else if (currentView === 'v-deposit' && tempInput) {
+                depositar(parseFloat(tempInput));
+            }
+        }
+
+        // =============================================
+        // LOGIN
+        // =============================================
+        function intentarLogin() {
+            const tarjeta = $('#input-tarjeta').val().trim();
+            const pin = currentPin;
+
+            if (!tarjeta || tarjeta.length < 4) {
+                sfx.error();
+                $('#login-msg').text('INGRESE NÚMERO DE TARJETA');
+                return;
+            }
+            if (pin.length < 4) {
+                sfx.error();
+                $('#login-msg').text('INGRESE PIN DE 4 DÍGITOS');
+                return;
+            }
+
+            $('#login-msg').removeClass('msg-error').addClass('msg-info').text('VERIFICANDO...');
+
+            $.ajax({
+                url: `${API_URL}/login.php`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ tarjeta: tarjeta, pin: pin }),
+                dataType: 'json'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    usuarioActual = resp.usuario;
+                    sfx.success();
+                    goTo('v-menu');
+                }
+            })
+            .fail(function(xhr) {
+                sfx.error();
+                let msg = 'ERROR DE CONEXIÓN';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = xhr.responseJSON.error.toUpperCase();
+                }
+                $('#login-msg').removeClass('msg-info').addClass('msg-error').text(msg);
+                currentPin = '';
+                updatePinDisplay();
+            });
+        }
+
+        // =============================================
+        // MENÚ
+        // =============================================
+        function renderMenu() {
+            if (!usuarioActual) return;
+            $('#u-name').text('AGENTE: ' + usuarioActual.nombre.toUpperCase());
+            $('#u-bal').text('$' + parseFloat(usuarioActual.saldo).toFixed(2));
+            $('#u-logs').html('');
+        }
+
+        // =============================================
+        // CONSULTAR SALDO
+        // =============================================
+        function consultarSaldo() {
+            if (!usuarioActual) return;
+            $('#menu-msg').text('CONSULTANDO...');
+
+            $.get(`${API_URL}/balance.php`)
+                .done(function(data) {
+                    usuarioActual.saldo = data.saldo;
+                    sfx.success();
+                    $('#u-bal').text('$' + data.saldo.toFixed(2));
+                    $('#menu-msg').text('SALDO ACTUALIZADO ✓');
+                    setTimeout(() => $('#menu-msg').text(''), 3000);
+                })
+                .fail(function(xhr) {
+                    sfx.error();
+                    handleAuthError(xhr);
+                    $('#menu-msg').text('ERROR AL CONSULTAR');
+                });
+        }
+
+        // =============================================
+        // RETIRO
+        // =============================================
+        function retirar(monto) {
+            if (!monto || monto <= 0) {
+                sfx.error();
+                $('#withdraw-msg').text('MONTO INVÁLIDO');
+                return;
+            }
+
+            $('#withdraw-msg').removeClass('msg-error').addClass('msg-info').text('PROCESANDO...');
+
+            $.ajax({
+                url: `${API_URL}/withdraw.php`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ monto: monto }),
+                dataType: 'json'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    usuarioActual.saldo = resp.nuevo_saldo;
+                    sfx.cash();
+                    mostrarResultado('💵', 'RETIRO EXITOSO', `MONTO: $${monto.toFixed(2)} | NUEVO SALDO: $${resp.nuevo_saldo.toFixed(2)}`);
+                }
+            })
+            .fail(function(xhr) {
+                sfx.error();
+                let msg = 'ERROR AL PROCESAR';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = xhr.responseJSON.error.toUpperCase();
+                }
+                $('#withdraw-msg').removeClass('msg-info').addClass('msg-error').text(msg);
+                handleAuthError(xhr);
+            });
+        }
+
+        // =============================================
+        // DEPÓSITO
+        // =============================================
+        function depositar(monto) {
+            if (!monto || monto <= 0) {
+                sfx.error();
+                $('#deposit-msg').text('MONTO INVÁLIDO');
+                return;
+            }
+
+            $('#deposit-msg').removeClass('msg-error').addClass('msg-info').text('PROCESANDO...');
+
+            $.ajax({
+                url: `${API_URL}/deposit.php`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ monto: monto }),
+                dataType: 'json'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    usuarioActual.saldo = resp.nuevo_saldo;
+                    sfx.success();
+                    mostrarResultado('💰', 'DEPÓSITO EXITOSO', `MONTO: $${monto.toFixed(2)} | NUEVO SALDO: $${resp.nuevo_saldo.toFixed(2)}`);
+                }
+            })
+            .fail(function(xhr) {
+                sfx.error();
+                let msg = 'ERROR AL PROCESAR';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = xhr.responseJSON.error.toUpperCase();
+                }
+                $('#deposit-msg').removeClass('msg-info').addClass('msg-error').text(msg);
+                handleAuthError(xhr);
+            });
+        }
+
+        // =============================================
+        // MOVIMIENTOS
+        // =============================================
+        function cargarMovimientos() {
+            $('#mov-list').html('<p class="loading">CARGANDO...</p>');
+
+            $.get(`${API_URL}/transactions.php`)
+                .done(function(movimientos) {
+                    if (!movimientos || movimientos.length === 0) {
+                        $('#mov-list').html('<p style="color: var(--warn);">NO HAY MOVIMIENTOS RECIENTES</p>');
+                        return;
+                    }
+
+                    let html = '';
+                    movimientos.forEach(function(m) {
+                        const fecha = new Date(m.fecha).toLocaleString('es-BO');
+                        const tipoClass = m.tipo === 'retiro' ? 'tipo-retiro' : 'tipo-deposito';
+                        const signo = m.tipo === 'retiro' ? '-' : '+';
+                        const icono = m.tipo === 'retiro' ? '▼' : '▲';
+                        html += `<div class="mov-item">
+                            <span class="${tipoClass}">${icono} ${m.tipo.toUpperCase()}</span>
+                            ${signo}$${parseFloat(m.monto).toFixed(2)}
+                            <span style="color:#555; font-size:0.8rem;"> | ${fecha}</span>
+                        </div>`;
+                    });
+                    $('#mov-list').html(html);
+                    sfx.success();
+                })
+                .fail(function(xhr) {
+                    sfx.error();
+                    $('#mov-list').html('<p class="msg-error">ERROR AL CARGAR MOVIMIENTOS</p>');
+                    handleAuthError(xhr);
+                });
+        }
+
+        // =============================================
+        // RESULTADO
+        // =============================================
+        function mostrarResultado(icono, mensaje, detalle) {
+            $('#result-icon').text(icono);
+            $('#result-msg').text(mensaje);
+            $('#result-detail').text(detalle);
+            goTo('v-result');
+            // No limpiar el mensaje de resultado al navegar
+            $('#result-msg').text(mensaje);
+            $('#result-detail').text(detalle);
+            $('#result-icon').text(icono);
+        }
+
+        // =============================================
+        // LOGOUT
+        // =============================================
+        function logout() {
+            sfx.logout();
+            $.post(`${API_URL}/logout.php`).always(function() {
+                usuarioActual = null;
+                goTo('v-start');
+            });
+        }
+
+        // =============================================
+        // MANEJO DE ERRORES DE AUTENTICACIÓN
+        // =============================================
+        function handleAuthError(xhr) {
+            if (xhr.status === 401) {
+                // Sesión expirada, volver al login
+                setTimeout(function() {
+                    sfx.error();
+                    usuarioActual = null;
+                    goTo('v-start');
+                }, 1500);
+            }
+        }
+
+        // =============================================
+        // TECLADO FÍSICO (opcional)
+        // =============================================
+        $(document).on('keydown', function(e) {
+            if (e.key >= '0' && e.key <= '9') kp(e.key);
+            else if (e.key === 'Enter') kp('E');
+            else if (e.key === 'Escape' || e.key === 'Backspace') kp('C');
+        });
+    </script>
+
+>>>>>>> f90fc7f234e12faa23f78c1dfe06b5c54cb48b31
+>>>>>>> b7c1a06386a779af52f4d1b04e9e4731c2491363
 </body>
 </html>
