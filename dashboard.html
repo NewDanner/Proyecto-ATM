@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NexoATM — Panel de Control</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#0b0f1a;color:#e4e8f1;min-height:100vh;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.header h1{font-family:'JetBrains Mono',monospace;font-size:22px;background:linear-gradient(135deg,#00d4ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .sub{font-size:11px;color:#4a5270;margin-top:3px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.stat-box{background:#141929;border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.stat-box::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px}
+.stat-box:nth-child(1)::before{background:linear-gradient(90deg,#00d4ff,transparent)}
+.stat-box:nth-child(2)::before{background:linear-gradient(90deg,#00ff88,transparent)}
+.stat-box:nth-child(3)::before{background:linear-gradient(90deg,#ff8c00,transparent)}
+.stat-box:nth-child(4)::before{background:linear-gradient(90deg,#a855f7,transparent)}
+.stat-box .label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#4a5270;margin-bottom:4px}
+.stat-box .value{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.panel{background:#141929;border:1px solid rgba(255,255,255,0.05);border-radius:14px;overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;font-weight:700}
+.panel-body{padding:14px;max-height:400px;overflow-y:auto}
+.panel-body::-webkit-scrollbar{width:3px}.panel-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+.tx-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.tx-row:last-child{border:none}
+.tx-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;margin-right:8px}
+.tx-type{font-size:11px;font-weight:600}.tx-meta{font-size:9px;color:#4a5270;font-family:'JetBrains Mono',monospace}
+.tx-amount{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+.tx-neg{color:#ff4466}.tx-pos{color:#00dd77}
+.chart-container{position:relative;height:220px;margin:10px 0}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:8px 16px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#7a82a0;transition:all 0.2s}
+.tab.active{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.2);color:#00d4ff}
+.refresh-btn{padding:5px 12px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.15);border-radius:6px;color:#00d4ff;font-family:'JetBrains Mono',monospace;font-size:9px;cursor:pointer}
+.decision-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:12px;margin-bottom:8px}
+.d-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.d-type{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
+.d-result{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px}
+.d-approved{background:rgba(0,220,100,0.1);color:#00dd77}.d-denied{background:rgba(255,50,80,0.1);color:#ff4466}
+.crit-bar{display:flex;align-items:center;gap:6px;margin:3px 0;font-size:10px}
+.crit-bar .c-name{width:110px;color:#7a82a0;font-family:'JetBrains Mono',monospace}
+.crit-bar .c-bar{flex:1;height:5px;background:#1a1f35;border-radius:3px;overflow:hidden}
+.crit-bar .c-fill{height:100%;border-radius:3px}
+.c-pass{background:#00dd77}.c-fail{background:#ff4466}
+.crit-bar .c-w{width:24px;text-align:right;color:#4a5270;font-family:'JetBrains Mono',monospace}
+.d-score{font-family:'JetBrains Mono',monospace;font-size:10px;color:#5a6280;margin-top:6px}
+.audit-line{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 0;line-height:1.7}
+.audit-line.success{color:#00dd77}.audit-line.warning{color:#ffbb33}.audit-line.error{color:#ff4466}.audit-line.info{color:#44aaff}
+.empty{text-align:center;padding:30px 0;color:#3a4060;font-size:12px}
+.bank-stat{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.bank-dot{width:8px;height:8px;border-radius:50%}.bank-name{flex:1;font-size:12px}
+.bank-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header"><div><h1>📊 NexoATM Dashboard</h1><div class="sub">Panel de control, monitoreo y Teoría de Decisiones</div></div></div>
+
+<div class="stats-row">
+  <div class="stat-box"><div class="label">Transacciones Hoy</div><div class="value" id="sTxCount">--</div></div>
+  <div class="stat-box"><div class="label">Monto Total Hoy</div><div class="value" id="sTxTotal">--</div></div>
+  <div class="stat-box"><div class="label">Tarjetas Activas</div><div class="value" id="sCards">--</div></div>
+  <div class="stat-box"><div class="label">Redes Soportadas</div><div class="value">3</div></div>
+</div>
+
+<!-- Charts -->
+<div class="grid-2">
+  <div class="panel"><div class="panel-head"><span>📈 Transacciones por Hora</span></div><div class="panel-body"><div class="chart-container"><canvas id="hourlyChart"></canvas></div></div></div>
+  <div class="panel"><div class="panel-head"><span>🍩 Distribución por Tipo</span></div><div class="panel-body"><div class="chart-container"><canvas id="typeChart"></canvas></div></div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('transactions',this)">📜 Transacciones</div>
+  <div class="tab" onclick="showTab('decisions',this)">🧠 Decisiones</div>
+  <div class="tab" onclick="showTab('queue',this)">📊 Teoría de Colas</div>
+  <div class="tab" onclick="showTab('audit',this)">📋 Auditoría</div>
+</div>
+
+<div id="tab-transactions">
+  <div class="grid-2">
+    <div class="panel"><div class="panel-head"><span>Transacciones Recientes</span><button class="refresh-btn" onclick="loadStats()">↻</button></div><div class="panel-body" id="recentTxPanel"><div class="empty">Cargando...</div></div></div>
+    <div class="panel"><div class="panel-head"><span>Actividad por Banco</span></div><div class="panel-body" id="bankStatsPanel"><div class="empty">Cargando...</div></div></div>
+  </div>
+</div>
+<div id="tab-decisions" style="display:none">
+  <div class="panel"><div class="panel-head"><span>🧠 Registro de Teoría de Decisiones</span><button class="refresh-btn" onclick="loadDecisions()">↻</button></div><div class="panel-body" id="decisionsPanel" style="max-height:600px"><div class="empty">Cargando...</div></div></div>
+</div>
+<div id="tab-queue" style="display:none">
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><span>📊 Métricas M/M/1</span><button class="refresh-btn" onclick="loadQueue()">↻</button></div>
+      <div class="panel-body" id="queueMetricsPanel"><div class="empty">Cargando...</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span>📈 Llegadas por Hora</span></div>
+      <div class="panel-body"><div class="chart-container"><canvas id="queueChart"></canvas></div></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <div class="panel-head"><span>📋 Sesiones de Usuarios</span></div>
+    <div class="panel-body" id="queueSessionsPanel" style="max-height:400px"><div class="empty">Cargando...</div></div>
+  </div>
+</div>
+<div id="tab-audit" style="display:none">
+  <div class="panel"><div class="panel-head"><span>Log de Auditoría</span><button class="refresh-btn" onclick="loadAudit()">↻</button></div><div class="panel-body" id="auditPanel" style="max-height:500px"><div class="empty">Cargando...</div></div></div>
+</div>
+
+<script>
+const API='api/api.php';
+let hourlyChartInstance,typeChartInstance;
+
+function showTab(n,el){document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).style.display='block';el.classList.add('active');if(n==='decisions')loadDecisions();if(n==='audit')loadAudit();if(n==='queue')loadQueue()}
+async function apiFetch(a,p={}){let u=`${API}?action=${a}`;Object.entries(p).forEach(([k,v])=>u+=`&${k}=${encodeURIComponent(v)}`);return await(await fetch(u)).json()}
+
+async function loadStats(){
+  const data=await apiFetch('get_stats');if(!data.success)return;const s=data.stats;
+  document.getElementById('sTxCount').textContent=s.today_count;
+  document.getElementById('sTxTotal').textContent='Bs '+parseFloat(s.today_total).toLocaleString('es-BO',{minimumFractionDigits:2});
+  document.getElementById('sCards').textContent=s.active_cards;
+
+  // Hourly chart
+  const hours=Array.from({length:24},(_,i)=>i);
+  const hourData=hours.map(h=>{const found=s.hourly?.find(x=>parseInt(x.h)===h);return found?parseInt(found.c):0});
+  if(hourlyChartInstance)hourlyChartInstance.destroy();
+  hourlyChartInstance=new Chart(document.getElementById('hourlyChart'),{type:'bar',data:{labels:hours.map(h=>`${h}:00`),datasets:[{label:'Transacciones',data:hourData,backgroundColor:'rgba(0,212,255,0.4)',borderColor:'#00d4ff',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',font:{size:8}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#4a5270'},grid:{color:'rgba(255,255,255,0.03)'}}}}});
+
+  // Type chart
+  const typeLabels={withdrawal:'Retiro',deposit:'Depósito',transfer:'Transferencia',balance_inquiry:'Consulta',pin_change:'Cambio PIN',donation:'Donación'};
+  const typeColors=['#ff4466','#00dd77','#00bbff','#a855f7','#ffbb33','#ff6b35'];
+  const td=s.type_distribution||[];
+  if(typeChartInstance)typeChartInstance.destroy();
+  if(td.length>0){
+    typeChartInstance=new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:td.map(t=>typeLabels[t.tx_type]||t.tx_type),datasets:[{data:td.map(t=>parseInt(t.c)),backgroundColor:typeColors.slice(0,td.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#7a82a0',font:{size:10},padding:8}}}}});
+  }
+
+  // Recent transactions
+  const txP=document.getElementById('recentTxPanel');
+  if(!s.recent_transactions.length){txP.innerHTML='<div class="empty">Sin transacciones</div>';return}
+  const icons={withdrawal:'💸',deposit:'💰',transfer:'🔄',balance_inquiry:'👁️',pin_change:'🔑',donation:'❤️'};
+  const colors={withdrawal:'rgba(255,68,102,0.1)',deposit:'rgba(0,221,119,0.1)',transfer:'rgba(0,187,255,0.1)',balance_inquiry:'rgba(168,85,247,0.1)',pin_change:'rgba(255,180,0,0.1)',donation:'rgba(255,107,53,0.1)'};
+  txP.innerHTML=s.recent_transactions.map(tx=>{const neg=tx.tx_type==='withdrawal'||tx.tx_type==='transfer'||tx.tx_type==='donation';const cs=tx.currency==='USD'?'$':'Bs';const amt=tx.amount?`${neg?'-':'+'}${cs} ${parseFloat(tx.amount).toLocaleString('es-BO',{minimumFractionDigits:2})}`:'--';return `<div class="tx-row"><div style="display:flex;align-items:center"><div class="tx-icon" style="background:${colors[tx.tx_type]||'#222'}">${icons[tx.tx_type]||'📝'}</div><div><div class="tx-type">${typeLabels[tx.tx_type]||tx.tx_type} — ${tx.bank_name}</div><div class="tx-meta">${tx.tx_code} | ****${tx.card_number?.slice(-4)||''} | ${tx.created_at}</div></div></div><div class="tx-amount ${neg?'tx-neg':'tx-pos'}">${amt}</div></div>`}).join('');
+
+  // Bank stats
+  const bP=document.getElementById('bankStatsPanel');
+  bP.innerHTML=s.bank_stats.map(b=>`<div class="bank-stat"><div class="bank-dot" style="background:${b.primary_color}"></div><div class="bank-name">${b.short_name}</div><div class="bank-val">${b.tx_count} tx | Bs ${parseFloat(b.tx_total).toLocaleString('es-BO',{minimumFractionDigits:2})}</div></div>`).join('');
+  if(s.network_stats?.length){const nc={visa:'#6680ff',mastercard:'#ff6677',amex:'#44aaff'};bP.innerHTML+='<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.04);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#4a5270;margin-bottom:6px">Tarjetas por Red</div>';s.network_stats.forEach(n=>{bP.innerHTML+=`<div class="bank-stat"><div class="bank-dot" style="background:${nc[n.code]||'#666'}"></div><div class="bank-name">${n.name}</div><div class="bank-val">${n.card_count}</div></div>`})}
+}
+
+async function loadDecisions(){
+  const data=await apiFetch('get_decision_log',{limit:30});const p=document.getElementById('decisionsPanel');
+  if(!data.success||!data.decisions.length){p.innerHTML='<div class="empty">Sin decisiones. Realice operaciones en el cajero.</div>';return}
+  const labels={pin_auth:'🔐 Autenticación PIN',withdrawal_auth:'💸 Retiro',deposit_auth:'💰 Depósito',transfer_auth:'🔄 Transferencia'};
+  p.innerHTML=data.decisions.map(d=>{const c=d.criteria_evaluated||[];return `<div class="decision-card"><div class="d-header"><span class="d-type">${labels[d.decision_type]||d.decision_type}</span><span class="d-result ${d.decision_result==='APPROVED'?'d-approved':'d-denied'}">${d.decision_result}</span></div>${c.map(x=>`<div class="crit-bar"><span class="c-name">${x.name}</span><div class="c-bar"><div class="c-fill ${x.passed?'c-pass':'c-fail'}" style="width:${x.passed?100:0}%"></div></div><span class="c-w">${x.weight}</span></div>`).join('')}<div class="d-score">Score: ${d.total_score}/${d.threshold} | ${d.denial_reason||'OK'} | ${d.processing_time_ms}ms | ${d.created_at}</div></div>`}).join('')}
+
+async function loadAudit(){const data=await apiFetch('get_audit_log',{limit:50});const p=document.getElementById('auditPanel');if(!data.success||!data.logs.length){p.innerHTML='<div class="empty">Sin registros</div>';return}p.innerHTML=data.logs.map(l=>`<div class="audit-line ${l.level}">[${l.created_at}] [${l.level.toUpperCase()}] ${l.message}</div>`).join('')}
+
+let queueChartInstance;
+async function loadQueue(){
+  const data=await apiFetch('get_queue_stats');
+  if(!data.success){document.getElementById('queueMetricsPanel').innerHTML='<div class="empty">Error al cargar</div>';return}
+  const q=data.queue;
+  const mp=document.getElementById('queueMetricsPanel');
+
+  // Métricas M/M/1
+  mp.innerHTML=`
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#a855f7;margin-bottom:4px">Modelo</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#e4e8f1">${q.model}</div>
+      <div style="font-size:11px;color:#4a5270;margin-top:2px">${q.sessions_count} sesiones | ${q.observed_hours}h observadas</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:9px;color:#a855f7;text-transform:uppercase;letter-spacing:1px">λ Lambda</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#a855f7">${q.lambda}</div>
+        <div style="font-size:9px;color:#4a5270">clientes/hora</div>
+      </div>
+      <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:9px;color:#00d4ff;text-transform:uppercase;letter-spacing:1px">μ Mu</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#00d4ff">${q.mu}</div>
+        <div style="font-size:9px;color:#4a5270">clientes/hora</div>
+      </div>
+      <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:9px;color:#ff6b35;text-transform:uppercase;letter-spacing:1px">ρ Rho (Utilización)</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#ff6b35">${(q.rho*100).toFixed(1)}%</div>
+        <div style="font-size:9px;color:#4a5270">del tiempo ocupado</div>
+      </div>
+      <div style="background:rgba(0,221,119,0.08);border:1px solid rgba(0,221,119,0.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:9px;color:#00dd77;text-transform:uppercase;letter-spacing:1px">P₀ (Prob. Libre)</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#00dd77">${(q.p0*100).toFixed(1)}%</div>
+        <div style="font-size:9px;color:#4a5270">cajero sin uso</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:8px;color:#4a5270;text-transform:uppercase">Lq (Cola)</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${q.lq}</div>
+        <div style="font-size:8px;color:#4a5270">clientes esperando</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:8px;color:#4a5270;text-transform:uppercase">Wq (Espera)</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${q.wq}s</div>
+        <div style="font-size:8px;color:#4a5270">seg en cola</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:8px;color:#4a5270;text-transform:uppercase">W (Total)</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${q.w}s</div>
+        <div style="font-size:8px;color:#4a5270">seg en sistema</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px">
+      <div style="font-size:10px;color:#4a5270;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Promedios Observados</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:#7a82a0">Espera promedio:</span><span style="font-family:'JetBrains Mono',monospace;font-weight:600">${q.avg_wait_sec}s</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:#7a82a0">Servicio promedio:</span><span style="font-family:'JetBrains Mono',monospace;font-weight:600">${q.avg_service_sec}s</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:#7a82a0">Tiempo total promedio:</span><span style="font-family:'JetBrains Mono',monospace;font-weight:600">${q.avg_total_sec}s</span></div>
+    </div>`;
+
+  // Gráfico de llegadas por hora
+  const hourly=q.hourly_arrivals||[];
+  const hours=Array.from({length:24},(_,i)=>i);
+  const hData=hours.map(h=>{const f=hourly.find(x=>parseInt(x.h)===h);return f?parseInt(f.c):0});
+  if(queueChartInstance)queueChartInstance.destroy();
+  queueChartInstance=new Chart(document.getElementById('queueChart'),{type:'bar',data:{labels:hours.map(h=>`${h}:00`),datasets:[{label:'Llegadas',data:hData,backgroundColor:'rgba(168,85,247,0.4)',borderColor:'#a855f7',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',font:{size:8}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#4a5270',stepSize:1},grid:{color:'rgba(255,255,255,0.03)'}}}}});
+
+  // Sesiones
+  const sp=document.getElementById('queueSessionsPanel');
+  const sessions=q.sessions||[];
+  if(!sessions.length){sp.innerHTML='<div class="empty">Sin sesiones registradas</div>';return}
+  sp.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:'JetBrains Mono',monospace">
+    <tr style="color:#4a5270;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <th style="padding:6px 4px">Sesión</th><th style="padding:6px 4px">Llegada</th><th style="padding:6px 4px">Espera</th><th style="padding:6px 4px">Servicio</th><th style="padding:6px 4px">Total</th><th style="padding:6px 4px">Tx</th><th style="padding:6px 4px">Estado</th>
+    </tr>
+    ${sessions.map(s=>{
+      const statusColor=s.status==='completed'?'#00dd77':s.status==='in_service'?'#00d4ff':'#ffbb33';
+      return `<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">
+        <td style="padding:5px 4px;color:#7a82a0">${s.session_id}</td>
+        <td style="padding:5px 4px">${s.arrival_time?.substring(11,16)||'--'}</td>
+        <td style="padding:5px 4px">${s.wait_time_sec}s</td>
+        <td style="padding:5px 4px">${s.service_time_sec}s</td>
+        <td style="padding:5px 4px;font-weight:600">${s.total_time_sec}s</td>
+        <td style="padding:5px 4px;text-align:center">${s.transactions_count}</td>
+        <td style="padding:5px 4px;color:${statusColor}">${s.status}</td>
+      </tr>`}).join('')}
+  </table>`;
+}
+
+loadStats();loadAudit();setInterval(loadStats,15000);
+</script>
+</body>
+</html>

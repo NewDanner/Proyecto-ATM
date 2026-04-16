@@ -1,0 +1,670 @@
+# ═══════════════════════════════════════════════════════════════
+# NexoATM — GUÍA COMPLETA DE PRUEBAS (Versión Final)
+# Documento para verificar todas las funcionalidades del sistema
+# ═══════════════════════════════════════════════════════════════
+
+## REQUISITOS PREVIOS
+
+1. XAMPP encendido (Apache + MySQL)
+2. Base de datos importada: phpMyAdmin → Importar nexoatm.sql
+3. Proyecto en: C:\xampp\htdocs\nexoatm\
+4. Abrir en navegador: http://localhost/nexoatm/index.html
+5. IMPORTANTE: Ctrl+Shift+R para limpiar caché del navegador
+
+
+## CUENTAS DE PRUEBA RÁPIDA
+
+MERCANTIL (azul):  1001-0001-2024 | PIN: 1234 | Seguridad: firulais
+BNB (verde):       2001-0001-2024 | PIN: 9012 | Seguridad: carmen
+UNIÓN (rojo):      3001-0001-2024 | PIN: 7890 | Seguridad: rocky
+
+
+## ═══════════════════════════════════════
+## FLUJO GENERAL DEL SISTEMA
+## ═══════════════════════════════════════
+
+El orden de pantallas al usar el cajero es:
+
+  Inicio → Insertar Tarjeta → Login (cuenta + PIN) →
+  Selección de Idioma → Selección de Moneda → Menú Principal →
+  Operaciones
+
+Notas importantes:
+- El IDIOMA se elige UNA SOLA VEZ después del login (ya no hay
+  botones ES/EN en la barra superior).
+- La PRIMERA operación transaccional después del login NO pide
+  PIN otra vez (ya lo ingresó al inicio). De la SEGUNDA operación
+  en adelante, sí pide PIN de verificación.
+
+
+## ═══════════════════════════════════════
+## PRUEBA 1: PANTALLA DE INICIO
+## ═══════════════════════════════════════
+
+HACER: Abrir http://localhost/nexoatm/index.html
+
+DEBE MOSTRAR:
+- Carcasa de cajero automático con aspecto físico
+- Logo "N" con texto "NexoATM"
+- Botón "Insertar Tarjeta" con ícono 💳
+- Badges: VISA, MC, AMEX
+- Barra superior: indicador verde + reloj (YA NO hay botones ES/EN)
+- Herramientas: ☀️ (tema), ♿ (accesibilidad), 🔊 (sonido), ❓ (tutorial)
+- Teclado numérico físico inferior
+- Ranura de tarjeta con luz pulsante
+- NO debe haber ningún enlace al panel de administración
+
+
+## ═══════════════════════════════════════
+## PRUEBA 2: ANIMACIÓN DE TARJETA
+## ═══════════════════════════════════════
+
+HACER: Clic en "Insertar Tarjeta"
+
+DEBE MOSTRAR:
+- Pantalla oscura con tarjeta bajando desde arriba
+- Tarjeta con chip dorado, números ocultos, marca VISA
+- Sonido de inserción (si sonidos activados)
+- Después de ~2 seg la tarjeta desaparece abajo
+- Se abre la pantalla de login con cursor en el campo de cuenta
+
+
+## ═══════════════════════════════════════
+## PRUEBA 3: LOGIN
+## ═══════════════════════════════════════
+
+### 3A: Login exitoso
+
+HACER:
+- Escribir cuenta: 1001-0001-2024 (los guiones se agregan solos)
+- Escribir PIN: 1234
+- Presionar "Confirmar" o Enter
+
+DEBE MOSTRAR:
+- "Verificando..." momentáneamente
+- Toast verde: "Bienvenido/a, CARLOS MENDOZA Q."
+- Sonido de éxito
+- Barra superior cambia a color AZUL (Mercantil)
+- Pasa a la pantalla de SELECCIÓN DE IDIOMA (ya no directo a moneda)
+- NO debe aparecer ningún panel de análisis de decisiones
+
+### 3B: Login con PIN incorrecto
+
+HACER:
+- Cuenta: 1001-0001-2024 → PIN: 9999
+
+DEBE MOSTRAR:
+- Mensaje rojo: "PIN incorrecto. Quedan 2 intentos."
+- Sonido de error
+- Campo PIN se vacía solo
+- NO debe aparecer panel de decisiones
+
+### 3C: Bloqueo por 3 intentos
+
+HACER: Intentar 3 veces con PIN incorrecto
+
+DEBE MOSTRAR:
+- 1er intento: "Quedan 2 intentos"
+- 2do intento: "Quedan 1 intentos"
+- 3er intento: "Tarjeta bloqueada por seguridad"
+- Se expulsa la tarjeta automáticamente
+
+PARA DESBLOQUEAR: phpMyAdmin → tabla cards →
+card_status='active', pin_attempts=0, blocked_until=NULL
+
+### 3D: Auto-formato de cuenta
+
+HACER: Escribir "100100012024" sin guiones
+
+DEBE MOSTRAR:
+- Se formatea automáticamente a "1001-0001-2024"
+- Los guiones aparecen solos cada 4 dígitos
+- Al completar 12 dígitos, salta automáticamente al campo PIN
+
+### 3E: Cambio de tema por banco
+
+HACER: Login con 2001-0001-2024 / PIN: 9012
+DEBE MOSTRAR: Tema VERDE del BNB
+
+HACER: Login con 3001-0001-2024 / PIN: 7890
+DEBE MOSTRAR: Tema ROJO/NARANJA del Banco Unión
+
+
+## ═══════════════════════════════════════
+## PRUEBA 4: SELECCIÓN DE IDIOMA (NUEVO)
+## ═══════════════════════════════════════
+
+HACER: Después de login exitoso
+
+DEBE MOSTRAR:
+- Ícono 🌐
+- Texto "Seleccione el idioma"
+- Dos opciones grandes:
+  · "ES" amarillo — Español
+  · "EN" azul — Inglés
+- Botón rojo "Retirar Tarjeta" abajo
+
+### 4A: Elegir Español
+
+HACER: Clic en "ES — Español"
+DEBE MOSTRAR:
+- Sonido breve de tecla
+- Pasa a la pantalla de selección de moneda
+- Todos los textos en español
+
+### 4B: Elegir Inglés
+
+HACER: (Volver a loguearse) Clic en "EN — English"
+DEBE MOSTRAR:
+- Todos los textos del resto del sistema en inglés
+- "Select currency" en vez de "Seleccione la moneda"
+- El menú principal, recibos, avisos, tutorial, etc.
+  permanecen en inglés durante toda la sesión
+
+NOTA: El idioma se fija una sola vez por sesión. No hay forma
+de cambiarlo a mitad de la sesión. Al retirar la tarjeta y
+volver a loguearse, se vuelve a preguntar el idioma.
+
+
+## ═══════════════════════════════════════
+## PRUEBA 5: SELECCIÓN DE MONEDA
+## ═══════════════════════════════════════
+
+HACER: Después de elegir el idioma
+
+DEBE MOSTRAR:
+- "Seleccione la moneda" (o "Select currency" si elegiste EN)
+- Botón "Bs" (verde) y botón "$" (azul)
+
+HACER: Clic en "Bs"
+
+DEBE MOSTRAR:
+- Menú principal con "[BOB]" junto al nombre
+
+
+## ═══════════════════════════════════════
+## PRUEBA 6: MENÚ PRINCIPAL
+## ═══════════════════════════════════════
+
+DEBE MOSTRAR:
+- Header del banco con colores
+- "Bienvenido/a, CARLOS MENDOZA Q. [BOB]"
+- 7 opciones: Retiro, Depósito, Transferencia, Saldo,
+  Cambio PIN, Historial, Ajustes
+- Botón rojo "Retirar Tarjeta"
+
+
+## ═══════════════════════════════════════
+## PRUEBA 7: VERIFICACIÓN DE PIN POR OPERACIÓN (ACTUALIZADO)
+## ═══════════════════════════════════════
+
+REGLA NUEVA: La PRIMERA operación después del login NO pide PIN
+otra vez (ya se ingresó al iniciar sesión). Desde la SEGUNDA
+operación en adelante, sí se pide el PIN de verificación.
+
+### 7A: Primera operación sin PIN
+
+HACER: Desde el menú (recién logueado), presionar "Retiro"
+
+DEBE MOSTRAR:
+- Va DIRECTO a la pantalla de retiro
+- NO aparece overlay de PIN
+- Ningún sonido extra, solo se abre la pantalla
+
+HACER: Completar el retiro (elegir monto, confirmar si aplica)
+HACER: En el recibo, presionar "Otra Operación" para volver al menú
+
+### 7B: Segunda operación sí pide PIN
+
+HACER: Desde el menú, presionar "Depósito"
+
+DEBE MOSTRAR:
+- Overlay con candado 🔐
+- Texto: "Ingrese su PIN para continuar"
+- Campo de PIN de 4 dígitos
+- Botones "Cancelar" y "Confirmar"
+
+HACER: Escribir PIN correcto (1234) y confirmar
+DEBE MOSTRAR:
+- Sonido de éxito
+- Se abre la pantalla de depósito
+
+HACER: Volver al menú → Presionar "Transferencia"
+DEBE MOSTRAR: Otra vez el overlay de PIN (sigue pidiéndolo)
+
+HACER: Escribir PIN incorrecto
+DEBE MOSTRAR:
+- "PIN incorrecto" en rojo
+- Campo se vacía, puede reintentar
+
+### 7C: Al retirar la tarjeta se resetea
+
+HACER: Retirar tarjeta → volver a loguearse →
+       hacer la primera operación
+
+DEBE MOSTRAR:
+- Nuevamente va directo sin pedir PIN (la bandera se resetea
+  con cada nuevo login)
+
+NOTA: El PIN de seguridad aplica a:
+Retiro, Depósito, Transferencia y Cambio de PIN.
+Saldo, Historial y Ajustes NUNCA piden PIN extra.
+
+
+## ═══════════════════════════════════════
+## PRUEBA 8: RETIRO CON MONTO FIJO (CON PREGUNTA DE RECIBO)
+## ═══════════════════════════════════════
+
+HACER:
+- Menú → Retiro (1ra operación: sin PIN / 2da+: con PIN)
+- Presionar el botón "500"
+
+DEBE MOSTRAR:
+- SIN modal de confirmación del monto
+- Aparece overlay con ícono 🧾
+- Texto: "¿Desea imprimir el recibo?"
+- Botones "No imprimir" y "Sí, imprimir"
+
+HACER: Presionar "Sí, imprimir"
+
+DEBE MOSTRAR:
+- Spinner "Procesando operación..."
+- Animación de billetes saliendo (verdes para Bs)
+- Sonido de dispensar efectivo
+- Recibo con datos completos y código QR
+- AUTOMÁTICAMENTE se abre una nueva ventana con el recibo
+  formateado y el diálogo de impresión del navegador
+
+HACER: Presionar "Otra Operación" → Retiro → (PIN si corresponde)
+       → Presionar botón "150" → "No imprimir"
+
+DEBE MOSTRAR:
+- Billetes, recibo en pantalla con Bs 150.00
+- NO se abre ventana de impresión
+- El botón "Imprimir" en el recibo sigue disponible si cambia
+  de idea y quiere imprimirlo manualmente
+
+
+## ═══════════════════════════════════════
+## PRUEBA 9: RETIRO CON "OTRA CANTIDAD" (CON CONFIRMACIÓN)
+## ═══════════════════════════════════════
+
+HACER: Menú → Retiro
+
+DEBE MOSTRAR (ESTADO INICIAL):
+- Solo se ven los 8 botones de monto (50, 150, 250, 350, 500,
+  600, 700, Otra cantidad)
+- NO aparece el display "Bs 0"
+- NO aparece el botón "Confirmar"
+- Solo los botones "← Menú" abajo
+
+HACER: Presionar "Otra cantidad"
+
+DEBE MOSTRAR:
+- Desaparecen los botones de monto
+- APARECE el display "Bs 0"
+- APARECE el botón azul "Confirmar"
+- Texto guía "Ingrese el monto deseado — Use el teclado numérico ↓"
+
+HACER:
+- Usar teclado virtual o físico para escribir: 1250
+- Presionar "Confirmar"
+
+DEBE MOSTRAR:
+- Modal: "¿Desea retirar Bs 1,250.00?"
+- Botones "No, cancelar" y "Sí, confirmar"
+
+HACER: Clic en "Sí, confirmar"
+
+DEBE MOSTRAR:
+- Overlay 🧾 "¿Desea imprimir el recibo?"
+- Botones "No imprimir" y "Sí, imprimir"
+
+HACER: Elegir cualquiera de los dos
+
+DEBE MOSTRAR:
+- Procesamiento → Billetes → Recibo
+- Si eligió "Sí, imprimir": ventana de impresión automática
+- Si eligió "No imprimir": solo el recibo en pantalla
+
+### 9B: Retiro con fondos insuficientes
+
+HACER: Intentar retirar 99990 (múltiplo válido de 10 pero sin saldo)
+
+DEBE MOSTRAR:
+- "Fondos insuficientes"
+- Vuelve a la pantalla de retiro en modo "Otra cantidad"
+
+### 9C: Validación de monto mínimo — Bolivianos (NUEVO)
+
+HACER: En "Otra cantidad" → escribir 5 → Confirmar
+DEBE MOSTRAR:
+- Toast rojo: "Monto mínimo: Bs 10"
+- Sonido de error. NO avanza al siguiente paso.
+
+HACER: Escribir 0 → Confirmar
+DEBE MOSTRAR: Toast rojo "Ingrese un monto válido"
+
+### 9D: Validación de denominaciones — Bolivianos (NUEVO)
+
+CONTEXTO: El cajero solo dispensa billetes de Bs 200, 100, 50,
+20 y 10. Por eso el monto debe ser múltiplo de 10.
+
+HACER: En "Otra cantidad" → escribir 155 → Confirmar
+DEBE MOSTRAR:
+- Toast rojo: "Solo múltiplos de Bs 10 (cortes: 200, 100, 50, 20, 10)"
+- Sonido de error. NO avanza.
+
+Pruebas adicionales que deben FALLAR con el mismo mensaje:
+- 15 → falla (no es múltiplo de 10)
+- 155 → falla (no es múltiplo de 10)
+- 333 → falla (no es múltiplo de 10)
+- 99 → falla (no es múltiplo de 10)
+
+Pruebas que deben FUNCIONAR:
+- 10, 20, 100, 250, 1250, 3330, etc. (todos múltiplos de 10)
+
+### 9E: Validación de monto mínimo — Dólares (NUEVO)
+
+HACER: Login → elegir idioma → elegir "$" (USD) → Retiro →
+       "Otra cantidad" → escribir 0 → Confirmar
+DEBE MOSTRAR: Toast rojo "Ingrese un monto válido"
+
+### 9F: Validación de denominaciones — Dólares (NUEVO)
+
+CONTEXTO: El cajero dispensa billetes de $100, 50, 20, 10, 5 y 1.
+USD acepta cualquier entero ≥ 1 porque con billetes de $1 se
+puede formar cualquier monto entero.
+
+HACER: En USD → "Otra cantidad" → escribir 1 → Confirmar
+DEBE MOSTRAR: Procesa normalmente (mínimo permitido)
+
+HACER: Escribir 50 → Confirmar → Procesa normalmente
+HACER: Escribir 237 → Confirmar → Procesa normalmente
+
+NOTA: El teclado numérico virtual solo acepta dígitos (no punto
+decimal), así que en la práctica no se pueden teclear centavos.
+La validación sirve como defensa extra por si llegara un monto
+no entero por otra vía.
+
+
+## ═══════════════════════════════════════
+## PRUEBA 10: DEPÓSITO
+## ═══════════════════════════════════════
+
+HACER:
+- Menú → Depósito (PIN solo si no es la 1ra operación)
+- Usar teclado para escribir: 2000
+- Confirmar → "Sí, confirmar"
+
+DEBE MOSTRAR:
+- Procesamiento → Recibo con DEPÓSITO: Bs 2,000.00
+- Saldo incrementado
+- Código QR en el recibo
+
+
+## ═══════════════════════════════════════
+## PRUEBA 11: CONSULTA DE SALDO
+## ═══════════════════════════════════════
+
+HACER: Menú → Saldo (NUNCA pide PIN)
+
+DEBE MOSTRAR:
+- Procesamiento breve
+- DOS tarjetas de saldo:
+  - Bolivianos: Bs XX,XXX.XX (verde)
+  - Dólares: $ X,XXX.XX (azul)
+- Nombre del titular y últimos 4 dígitos
+- Disponible hoy según límite diario
+
+
+## ═══════════════════════════════════════
+## PRUEBA 12: TRANSFERENCIA
+## ═══════════════════════════════════════
+
+### 12A: Transferencia normal (monto bajo)
+
+HACER:
+- Menú → Transferencia (PIN solo si no es la 1ra operación)
+- Seleccionar destino: "Roberto Flores M. — BNB"
+- Escribir monto: 500 → Confirmar
+
+DEBE MOSTRAR:
+- Modal de confirmación → Procesamiento → Recibo
+
+### 12B: Transferencia grande (pregunta de seguridad)
+
+HACER:
+- Transferencia → Seleccionar destino
+- Monto: 2500 (>= 2000) → Confirmar → "Sí"
+
+DEBE MOSTRAR:
+- MODAL DE SEGURIDAD con candado 🔒
+- Pregunta: "¿Nombre de su primera mascota?"
+
+HACER: Escribir "firulais" → Confirmar
+
+DEBE MOSTRAR:
+- Procesa la transferencia normalmente
+
+RESPUESTAS DE SEGURIDAD:
+Carlos: firulais | Ana: cochabamba | Roberto: carmen
+María: azul | Luis: rocky | Patricia: la paz
+
+
+## ═══════════════════════════════════════
+## PRUEBA 13: CAMBIO DE PIN
+## ═══════════════════════════════════════
+
+HACER:
+- Menú → Cambio PIN (PIN solo si no es la 1ra operación)
+- PIN Actual: 1234 | Nuevo: 4321 | Confirmar: 4321
+- Presionar "Cambiar PIN"
+
+DEBE MOSTRAR:
+- Toast verde: "PIN cambiado exitosamente"
+- Ahora el PIN es 4321
+
+RESTAURAR: phpMyAdmin → cards → pin_hash = '1234'
+
+
+## ═══════════════════════════════════════
+## PRUEBA 14: HISTORIAL
+## ═══════════════════════════════════════
+
+HACER: Menú → Historial (NUNCA pide PIN)
+
+DEBE MOSTRAR:
+- Lista de últimas transacciones con íconos
+- Montos en rojo (retiros) o verde (depósitos)
+- Fecha y hora de cada operación
+
+
+## ═══════════════════════════════════════
+## PRUEBA 15: CÓDIGO QR DEL RECIBO
+## ═══════════════════════════════════════
+
+CÓMO FUNCIONA:
+- Usa la librería QRious (CDN)
+- Cada recibo genera un QR REAL escaneable
+- Contenido: NexoATM|CÓDIGO_TX|MONTO|MONEDA|FECHA
+
+VERIFICAR:
+- Realizar cualquier operación
+- Escanear el QR del recibo con celular
+- Debe mostrar: NexoATM|TXABC1234|500|BOB|2026-04-14 14:30:00
+
+
+## ═══════════════════════════════════════
+## PRUEBA 16: IMPRIMIR RECIBO
+## ═══════════════════════════════════════
+
+HACER: En el recibo → "Imprimir"
+
+DEBE MOSTRAR:
+- Nueva ventana con recibo formateado
+- Diálogo de impresión del sistema
+
+
+## ═══════════════════════════════════════
+## PRUEBA 17: MODO OSCURO / CLARO
+## ═══════════════════════════════════════
+
+HACER: Clic en ☀️
+DEBE MOSTRAR: Interfaz clara. Botón cambia a 🌙
+HACER: Clic en 🌙 para volver
+
+
+## ═══════════════════════════════════════
+## PRUEBA 18: MODO ACCESIBILIDAD
+## ═══════════════════════════════════════
+
+HACER: Clic en ♿
+DEBE MOSTRAR: Textos y botones más grandes
+HACER: Clic en ♿ de nuevo para desactivar
+
+
+## ═══════════════════════════════════════
+## PRUEBA 19: SONIDOS
+## ═══════════════════════════════════════
+
+CON 🔊: Beep en teclas, éxito, error, dispensar, tarjeta
+CON 🔇: Silencio total
+
+
+## ═══════════════════════════════════════
+## PRUEBA 20: TUTORIAL
+## ═══════════════════════════════════════
+
+HACER: Clic en ❓
+DEBE MOSTRAR: 5 pasos guiados con íconos
+Último paso dice "Finalizar"
+
+
+## ═══════════════════════════════════════
+## PRUEBA 21: AJUSTES
+## ═══════════════════════════════════════
+
+HACER: Menú → Ajustes → Escribir 3000 → Guardar
+DEBE MOSTRAR: "Límite actualizado"
+
+
+## ═══════════════════════════════════════
+## PRUEBA 22: CIERRE POR INACTIVIDAD
+## ═══════════════════════════════════════
+
+HACER: Loguearse y no tocar nada 90 segundos
+DEBE MOSTRAR: Barra amarilla con cuenta regresiva
+A los 120 seg: cierre automático
+
+
+## ═══════════════════════════════════════
+## PRUEBA 23: MULTI-MONEDA (DÓLARES)
+## ═══════════════════════════════════════
+
+HACER: Login → Elegir idioma → Elegir "$"
+DEBE MOSTRAR: Operaciones en dólares, billetes oscuros, recibo en $
+
+
+## ═══════════════════════════════════════
+## PRUEBA 24: TECLADO FÍSICO Y VIRTUAL
+## ═══════════════════════════════════════
+
+LOGIN: Teclado escribe en campo activo sin duplicar
+MONTOS: Teclas numéricas controlan el monto
+Enter = confirmar | Escape = cancelar | Backspace = borrar
+Teclado virtual no roba foco de los inputs
+
+
+## ═══════════════════════════════════════
+## PRUEBA 25: RETIRAR TARJETA
+## ═══════════════════════════════════════
+
+HACER: "Retirar Tarjeta" en cualquier momento
+DEBE MOSTRAR: Sonido, toast, vuelve al inicio
+
+IMPORTANTE: Al retirar la tarjeta se resetea la bandera de
+"primera operación", así que en el siguiente login la primera
+operación volverá a entrar sin pedir PIN extra.
+
+
+## ═══════════════════════════════════════
+## PRUEBA 26: DASHBOARD — PANEL DE CONTROL
+## ═══════════════════════════════════════
+
+ABRIR: http://localhost/nexoatm/dashboard.html
+
+### 26A: Estadísticas
+- Transacciones hoy, Monto total, Tarjetas activas
+- Gráficos Chart.js (barras por hora, doughnut por tipo)
+
+### 26B: Teoría de Decisiones (pestaña 🧠)
+- TODAS las evaluaciones del Motor de Decisiones
+- Tipo, resultado (APPROVED/DENIED), barras de criterios
+- Score, tiempo en ms, fecha
+- SOLO visible aquí, NO en el cajero
+
+### 26C: Teoría de Colas (pestaña 📊)
+- Métricas M/M/1: λ, μ, ρ, P₀, Lq, Wq, W
+- Gráfico de llegadas por hora
+- Tabla de sesiones de usuarios
+- Se actualiza al usar el cajero
+
+### 26D: Auditoría (pestaña 📋)
+- Log con colores: verde=éxito, amarillo=warning, rojo=error
+
+
+## ═══════════════════════════════════════
+## PRUEBA 27: VERIFICACIÓN EN BASE DE DATOS
+## ═══════════════════════════════════════
+
+phpMyAdmin → nexoatm_db
+
+- transactions: operaciones con montos y saldos
+- decision_log: evaluaciones con criterios JSON
+- queue_log: sesiones con tiempos de llegada/servicio
+- audit_log: acciones del sistema
+- accounts: saldos actualizados (balance_bob, balance_usd)
+
+
+## ═══════════════════════════════════════
+## RESUMEN DE FUNCIONALIDADES (27 pruebas)
+## ═══════════════════════════════════════
+
+[✓] Aspecto de cajero físico
+[✓] Animación de inserción de tarjeta
+[✓] Login por cuenta con auto-formato de guiones
+[✓] Bloqueo automático (3 intentos PIN)
+[✓] Temas de color por banco (azul, verde, rojo)
+[✓] Selección de IDIOMA al inicio de sesión (ES / EN)
+[✓] Selección de moneda (Bs / USD)
+[✓] PIN omitido en la 1ra operación post-login
+[✓] PIN de seguridad desde la 2da operación en adelante
+[✓] Retiro directo con montos fijos (pregunta si imprimir recibo)
+[✓] Retiro personalizado con confirmación y pregunta de impresión
+[✓] Retiro personalizado: display "Bs 0" y botón Confirmar solo
+    aparecen al presionar "Otra cantidad"
+[✓] Validación de monto mínimo (Bs 10 / $ 1) en retiro personalizado
+[✓] Validación de denominaciones de billetes (múltiplos de 10 en
+    BOB, enteros en USD)
+[✓] Impresión automática del recibo si el usuario elige "Sí"
+[✓] Animación de billetes al dispensar
+[✓] Depósito y Transferencia con confirmación
+[✓] Pregunta de seguridad para montos >= 2000
+[✓] Consulta de saldo dual (Bs + USD)
+[✓] Cambio de PIN
+[✓] Historial de transacciones
+[✓] Código QR real escaneable en recibos
+[✓] Impresión de recibo
+[✓] Modo oscuro / claro
+[✓] Modo accesibilidad
+[✓] Sonidos del cajero (Web Audio API)
+[✓] Tutorial interactivo (5 pasos)
+[✓] Límite diario personalizable
+[✓] Cierre por inactividad (120 seg)
+[✓] Teclado virtual y físico correctos
+[✓] Dashboard con Chart.js
+[✓] Teoría de Decisiones (solo en Dashboard)
+[✓] Teoría de Colas M/M/1 (solo en Dashboard)
+[✓] Log de auditoría (solo en Dashboard)
+[✓] Páginas separadas: cajero vs panel de control
